@@ -136,33 +136,96 @@ export default function CandidateDashboard() {
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [schedulingInterview, setSchedulingInterview] = useState(false);
 
+  // Auth headers helper
+  const getAuthHeaders = useCallback((): Record<string, string> => {
+    const token = typeof window !== "undefined" ? (localStorage.getItem("apex_token") || localStorage.getItem("token")) : null;
+    return token && token !== "demo_jwt_token_2026" ? { "Authorization": `Bearer ${token}` } : {};
+  }, []);
+
+  // Profile Edit state
+  const [editMode, setEditMode] = useState(false);
+  const [editFullName, setEditFullName] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editBio, setEditBio] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editGithub, setEditGithub] = useState("");
+  const [editLinkedin, setEditLinkedin] = useState("");
+  const [editSalary, setEditSalary] = useState("");
+  const [editAvailability, setEditAvailability] = useState("open");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSavedMsg, setProfileSavedMsg] = useState("");
+
   const fetchAll = useCallback(async () => {
     try {
+      const headers = getAuthHeaders();
       const [pRes, jRes, hRes, iRes, nRes, aRes] = await Promise.all([
-        fetch(`${API}/api/v1/candidate/profile`),
-        fetch(`${API}/api/v1/candidate/jobs`),
-        fetch(`${API}/api/v1/candidate/hackathons`),
-        fetch(`${API}/api/v1/candidate/interviews`),
-        fetch(`${API}/api/v1/notifications/`),
-        fetch(`${API}/api/v1/candidate/applications`),
+        fetch(`${API}/api/v1/candidate/profile`, { headers }),
+        fetch(`${API}/api/v1/candidate/jobs`, { headers }),
+        fetch(`${API}/api/v1/candidate/hackathons`, { headers }),
+        fetch(`${API}/api/v1/candidate/interviews`, { headers }),
+        fetch(`${API}/api/v1/notifications/`, { headers }),
+        fetch(`${API}/api/v1/candidate/applications`, { headers }),
       ]);
-      if (pRes.ok) setProfile(await pRes.json());
+      if (pRes.ok) {
+        const prof = await pRes.json();
+        setProfile(prof);
+        setEditFullName(prof.full_name || "");
+        setEditTitle(prof.title || "");
+        setEditBio(prof.bio || "");
+        setEditLocation(prof.location || "");
+        setEditGithub(prof.github_username || "");
+        setEditLinkedin(prof.linkedin_url || "");
+        setEditSalary(prof.salary_expectation || "");
+        setEditAvailability(prof.availability || "open");
+      }
       if (jRes.ok) setJobs(await jRes.json());
       if (hRes.ok) setHackathons(await hRes.json());
       if (iRes.ok) setInterviews(await iRes.json());
       if (nRes.ok) { const n = await nRes.json(); setNotifications(n); setUnread(n.filter((x: any) => !x.is_read).length); }
       if (aRes.ok) setApplications(await aRes.json());
     } catch (e) { console.error(e); }
-  }, []);
+  }, [getAuthHeaders]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const saveProfile = async () => {
+    setSavingProfile(true); setProfileSavedMsg(""); setError("");
+    try {
+      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+      const res = await fetch(`${API}/api/v1/candidate/profile/edit`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          full_name: editFullName,
+          title: editTitle,
+          bio: editBio,
+          location: editLocation,
+          github_username: editGithub.replace("https://github.com/", "").replace("github.com/", "").trim(),
+          linkedin_url: editLinkedin,
+          salary_expectation: editSalary,
+          availability: editAvailability
+        })
+      });
+      if (!res.ok) throw new Error("Failed to save profile");
+      const updated = await res.json();
+      setProfile(updated);
+      setProfileSavedMsg("✓ Profile updated & saved to live database!");
+      setTimeout(() => setProfileSavedMsg(""), 3500);
+      setEditMode(false);
+      fetchAll();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const syncGitHub = async () => {
     if (!gitUsername) return;
     setSyncingGit(true); setError("");
     try {
       const res = await fetch(`${API}/api/v1/ai/sync-github`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ github_username: gitUsername })
       });
       if (!res.ok) throw new Error("GitHub sync failed");
@@ -176,7 +239,7 @@ export default function CandidateDashboard() {
     setParsingResume(true); setError("");
     try {
       const res = await fetch(`${API}/api/v1/ai/sync-resume`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ resume_url: resumeUrl })
       });
       if (!res.ok) throw new Error("Resume parse failed");
@@ -189,7 +252,10 @@ export default function CandidateDashboard() {
   const applyToJob = async (jobId: number) => {
     setApplyingJob(jobId);
     try {
-      const res = await fetch(`${API}/api/v1/candidate/apply/${jobId}`, { method: "POST" });
+      const res = await fetch(`${API}/api/v1/candidate/apply/${jobId}`, {
+        method: "POST",
+        headers: getAuthHeaders()
+      });
       if (res.ok) { setApplySuccess(jobId); fetchAll(); }
     } catch (e) {}
     finally { setApplyingJob(null); }
@@ -197,7 +263,10 @@ export default function CandidateDashboard() {
 
   const joinHackathon = async (hackId: number) => {
     try {
-      await fetch(`${API}/api/v1/candidate/hackathon/${hackId}/join`, { method: "POST" });
+      await fetch(`${API}/api/v1/candidate/hackathon/${hackId}/join`, {
+        method: "POST",
+        headers: getAuthHeaders()
+      });
       fetchAll();
     } catch (e) {}
   };
@@ -206,7 +275,7 @@ export default function CandidateDashboard() {
     setGeneratingResume(true);
     try {
       const res = await fetch(`${API}/api/v1/ai/generate-resume`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ target_role: profile?.title })
       });
       if (res.ok) setGeneratedResume(await res.json());
@@ -217,7 +286,9 @@ export default function CandidateDashboard() {
   const loadCareerGuidance = async () => {
     if (careerGuidance) return;
     try {
-      const res = await fetch(`${API}/api/v1/candidate/career-guidance`);
+      const res = await fetch(`${API}/api/v1/candidate/career-guidance`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) setCareerGuidance(await res.json());
     } catch (e) {}
   };
@@ -226,12 +297,15 @@ export default function CandidateDashboard() {
     setSchedulingInterview(true);
     try {
       const res = await fetch(`${API}/api/v1/interviews/schedule`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ interview_type: type })
       });
       if (res.ok) {
         const data = await res.json();
-        const startRes = await fetch(`${API}/api/v1/interviews/${data.id}/start`, { method: "POST" });
+        const startRes = await fetch(`${API}/api/v1/interviews/${data.id}/start`, {
+          method: "POST",
+          headers: getAuthHeaders()
+        });
         if (startRes.ok) {
           const started = await startRes.json();
           setActiveInterview({ ...data, current_question: started.first_question, total: started.total_questions });
@@ -247,7 +321,7 @@ export default function CandidateDashboard() {
     if (!activeInterview || !answer.trim()) return;
     try {
       const res = await fetch(`${API}/api/v1/interviews/${activeInterview.id}/answer`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ question_index: currentQ, answer })
       });
       if (res.ok) {
@@ -418,14 +492,81 @@ export default function CandidateDashboard() {
         {/* ── PROFILE HUB ─────────────────────────────────────────────── */}
         {tab === "profile" && (
           <div className="space-y-6">
-            <h1 className="text-xl font-black text-white">Profile Hub</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-black text-white">Profile Hub</h1>
+              <button 
+                onClick={() => setEditMode(!editMode)}
+                className="px-4 py-2 rounded-xl bg-violet-600/30 hover:bg-violet-600/50 border border-violet-500/40 text-xs font-semibold text-violet-200 transition"
+              >
+                {editMode ? "Cancel Editing" : "✏️ Edit Profile Data"}
+              </button>
+            </div>
+
+            {profileSavedMsg && (
+              <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-xs text-emerald-300 font-semibold animate-in fade-in">
+                {profileSavedMsg}
+              </div>
+            )}
+
+            {/* Live Edit Profile Form */}
+            {editMode && (
+              <div className="glass-panel p-6 rounded-2xl space-y-4 animate-in fade-in">
+                <h2 className="font-bold text-slate-200 text-sm border-b border-white/10 pb-2">Edit Live Database Profile</h2>
+                <div className="grid md:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="field-label">Full Name</label>
+                    <input value={editFullName} onChange={e => setEditFullName(e.target.value)} className="field-input w-full mt-1" />
+                  </div>
+                  <div>
+                    <label className="field-label">Professional Title</label>
+                    <input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="field-input w-full mt-1" />
+                  </div>
+                  <div>
+                    <label className="field-label">Location</label>
+                    <input value={editLocation} onChange={e => setEditLocation(e.target.value)} className="field-input w-full mt-1" />
+                  </div>
+                  <div>
+                    <label className="field-label">GitHub Username</label>
+                    <input value={editGithub} onChange={e => setEditGithub(e.target.value)} placeholder="username" className="field-input w-full mt-1" />
+                  </div>
+                  <div>
+                    <label className="field-label">LinkedIn URL</label>
+                    <input value={editLinkedin} onChange={e => setEditLinkedin(e.target.value)} placeholder="https://linkedin.com/in/..." className="field-input w-full mt-1" />
+                  </div>
+                  <div>
+                    <label className="field-label">Salary Expectation</label>
+                    <input value={editSalary} onChange={e => setEditSalary(e.target.value)} placeholder="$120,000 / yr" className="field-input w-full mt-1" />
+                  </div>
+                  <div>
+                    <label className="field-label">Availability</label>
+                    <select value={editAvailability} onChange={e => setEditAvailability(e.target.value)} className="field-input w-full mt-1 bg-slate-900 text-white">
+                      <option value="open">Open to Work</option>
+                      <option value="open_to_offers">Open to Offers</option>
+                      <option value="not_looking">Not Looking</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="field-label">Bio / Summary</label>
+                    <textarea value={editBio} onChange={e => setEditBio(e.target.value)} rows={3} className="field-input w-full mt-1" />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button onClick={() => setEditMode(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-400 text-xs hover:bg-slate-700">Cancel</button>
+                  <button onClick={saveProfile} disabled={savingProfile} className="btn-primary px-6 text-xs">
+                    {savingProfile ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : "Save Changes to Database ✓"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Identity */}
               <div className="glass-panel p-6 rounded-2xl space-y-4">
                 <h2 className="font-bold text-slate-200 text-sm">Identity</h2>
                 <div className="flex items-center gap-4">
                   <div className="h-16 w-16 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-full flex items-center justify-center text-2xl font-black text-white">
-                    {profile.full_name[0]}
+                    {profile.full_name ? profile.full_name[0] : "C"}
                   </div>
                   <div>
                     <h3 className="font-bold text-white">{profile.full_name}</h3>

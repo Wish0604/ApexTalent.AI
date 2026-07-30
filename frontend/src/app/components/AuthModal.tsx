@@ -108,25 +108,25 @@ export default function AuthModal({ isOpen, onClose, inline = false }: AuthModal
     try {
       const res = await fetch("http://localhost:8000/api/v1/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ username: email, password: password })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email, password: password })
       });
 
-      if (!res.ok) {
-        localStorage.setItem("token", "demo_jwt_token_2026");
-        localStorage.setItem("user_email", email);
-      } else {
+      if (res.ok) {
         const data = await res.json();
-        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("apex_token", data.access_token);
         localStorage.setItem("user_email", email);
+        localStorage.setItem("user_role", data.role || role);
+        setLoading(false);
+        redirectToRoleDashboard();
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.detail || "Invalid login credentials.");
+        setLoading(false);
       }
-
+    } catch (err: any) {
       setLoading(false);
-      redirectToRoleDashboard();
-    } catch (err) {
-      setLoading(false);
-      localStorage.setItem("token", "demo_jwt_token_2026");
-      redirectToRoleDashboard();
+      setErrorMsg("Connection error to auth server.");
     }
   };
 
@@ -144,10 +144,74 @@ export default function AuthModal({ isOpen, onClose, inline = false }: AuthModal
     setMode("register_step2");
   };
 
-  const handleStep2Submit = (e: React.FormEvent) => {
+  const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
-    startAiOnboarding();
+    setLoading(true);
+
+    try {
+      // 1. Register candidate user in DB
+      const regRes = await fetch("http://localhost:8000/api/v1/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          role: role
+        })
+      });
+
+      if (!regRes.ok) {
+        const err = await regRes.json();
+        if (err.detail !== "Email already registered") {
+          setErrorMsg(err.detail || "Registration failed.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Log in user to obtain JWT token
+      const loginRes = await fetch("http://localhost:8000/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email, password: password })
+      });
+
+      if (loginRes.ok) {
+        const tokenData = await loginRes.json();
+        localStorage.setItem("apex_token", tokenData.access_token);
+        localStorage.setItem("user_email", email);
+        localStorage.setItem("user_role", role);
+
+        // 3. Save Candidate details to database
+        if (role === "candidate") {
+          const cleanGithub = githubUrl.replace("https://github.com/", "").replace("github.com/", "").replace("https://", "").replace("/", "");
+          await fetch("http://localhost:8000/api/v1/candidate/profile/edit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${tokenData.access_token}`
+            },
+            body: JSON.stringify({
+              full_name: `${firstName} ${lastName}`.trim() || email.split("@")[0],
+              title: preferredRole || "Software Engineer",
+              bio: `${currentStatus} at ${companyOrCollege || 'Tech Community'}.`,
+              location: location || "Remote",
+              github_username: cleanGithub,
+              linkedin_url: linkedinUrl,
+              availability: "open",
+              salary_expectation: expectedSalary || "$120,000 / yr"
+            })
+          });
+        }
+      }
+
+      setLoading(false);
+      startAiOnboarding();
+    } catch (err: any) {
+      setLoading(false);
+      setErrorMsg("Could not connect to database server.");
+    }
   };
 
   const startAiOnboarding = () => {
