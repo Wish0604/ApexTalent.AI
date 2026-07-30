@@ -13,6 +13,8 @@ import {
   LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from "recharts";
 
+import CustomLoader from "../components/CustomLoader";
+
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // ── Sidebar ────────────────────────────────────────────────────────────────────
@@ -192,11 +194,8 @@ export default function OrganizationDashboard() {
   };
 
   if (!dashboard) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="flex flex-col items-center gap-4">
-        <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" />
-        <p className="text-slate-400 text-sm">Loading Organization Dashboard...</p>
-      </div>
+    <div className="flex items-center justify-center min-h-screen bg-[#070b12]">
+      <CustomLoader text="Loading Community" />
     </div>
   );
 

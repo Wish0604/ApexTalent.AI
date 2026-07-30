@@ -14,6 +14,8 @@ import {
   LineChart, Line
 } from "recharts";
 
+import CustomLoader from "../components/CustomLoader";
+
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // ── Talent Score Ring ─────────────────────────────────────────────────────────
@@ -264,11 +266,8 @@ export default function CandidateDashboard() {
   };
 
   if (!profile) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="flex flex-col items-center gap-4">
-        <RefreshCw className="w-8 h-8 text-violet-500 animate-spin" />
-        <p className="text-slate-400 text-sm">Loading Talent Profile...</p>
-      </div>
+    <div className="flex items-center justify-center min-h-screen bg-[#070b12]">
+      <CustomLoader text="Loading Profile" />
     </div>
   );
 
