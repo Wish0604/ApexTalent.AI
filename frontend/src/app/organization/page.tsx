@@ -97,18 +97,25 @@ export default function OrganizationDashboard() {
 
   const [teamSize, setTeamSize] = useState(3);
 
+  // Auth headers helper
+  const getAuthHeaders = useCallback((): Record<string, string> => {
+    const token = typeof window !== "undefined" ? (localStorage.getItem("apex_token") || localStorage.getItem("token")) : null;
+    return token && token !== "demo_jwt_token_2026" ? { "Authorization": `Bearer ${token}` } : {};
+  }, []);
+
   const fetchAll = useCallback(async () => {
     try {
+      const headers = getAuthHeaders();
       const [dRes, hRes, eRes, mRes, rRes, aRes] = await Promise.all([
-        fetch(`${API}/api/v1/organization/dashboard`),
-        fetch(`${API}/api/v1/organization/hackathons`),
-        fetch(`${API}/api/v1/organization/events`),
+        fetch(`${API}/api/v1/organization/dashboard`, { headers }),
+        fetch(`${API}/api/v1/organization/hackathons`, { headers }),
+        fetch(`${API}/api/v1/organization/events`, { headers }),
         fetch(`${API}/api/v1/recruiter/candidate-search`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json", ...headers },
           body: JSON.stringify({ query: "engineer developer" })
         }),
-        fetch(`${API}/api/v1/organization/recruiter-connect`),
-        fetch(`${API}/api/v1/organization/analytics`),
+        fetch(`${API}/api/v1/organization/recruiter-connect`, { headers }),
+        fetch(`${API}/api/v1/organization/analytics`, { headers }),
       ]);
       if (dRes.ok) setDashboard(await dRes.json());
       if (hRes.ok) setHackathons(await hRes.json());
@@ -117,7 +124,7 @@ export default function OrganizationDashboard() {
       if (rRes.ok) setRecruiters(await rRes.json());
       if (aRes.ok) setAnalytics(await aRes.json());
     } catch (e) { console.error(e); }
-  }, []);
+  }, [getAuthHeaders]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -126,7 +133,7 @@ export default function OrganizationDashboard() {
     setCreatingHack(true);
     try {
       const res = await fetch(`${API}/api/v1/organization/hackathon/create`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           title: hackTitle, description: hackDesc, prize_pool: hackPrize, max_team_size: teamSize,
           problem_tracks: hackTracks.split(",").map(s => s.trim()).filter(Boolean)
@@ -142,7 +149,7 @@ export default function OrganizationDashboard() {
     setCreatingEvt(true);
     try {
       const res = await fetch(`${API}/api/v1/organization/event/create`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ title: evtTitle, description: evtDesc, event_type: evtType, is_online: true })
       });
       if (res.ok) { setEvtCreated(true); setEvtTitle(""); setEvtDesc(""); fetchAll(); }
@@ -154,7 +161,7 @@ export default function OrganizationDashboard() {
     setBuildingTeams(true); setTeamsBuilt(false);
     try {
       const res = await fetch(`${API}/api/v1/organization/hackathon/${hackId}/team-builder`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ hackathon_id: hackId, team_size: teamSize })
       });
       if (res.ok) {
@@ -168,14 +175,18 @@ export default function OrganizationDashboard() {
 
   const loadParticipants = async (hackId: number) => {
     try {
-      const res = await fetch(`${API}/api/v1/organization/hackathon/${hackId}/participants`);
+      const res = await fetch(`${API}/api/v1/organization/hackathon/${hackId}/participants`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) setParticipants(await res.json());
     } catch (e) {}
   };
 
   const loadLeaderboard = async (hackId: number) => {
     try {
-      const res = await fetch(`${API}/api/v1/organization/leaderboard/${hackId}`);
+      const res = await fetch(`${API}/api/v1/organization/leaderboard/${hackId}`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) setLeaderboard(await res.json());
     } catch (e) {}
   };
@@ -183,7 +194,10 @@ export default function OrganizationDashboard() {
   const evaluateHackathon = async (hackId: number) => {
     setEvaluating(true);
     try {
-      const res = await fetch(`${API}/api/v1/organization/hackathon/${hackId}/evaluate`, { method: "POST" });
+      const res = await fetch(`${API}/api/v1/organization/hackathon/${hackId}/evaluate`, {
+        method: "POST",
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         setEvaluations(data.evaluations || []);

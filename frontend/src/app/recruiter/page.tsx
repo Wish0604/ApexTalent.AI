@@ -158,15 +158,22 @@ export default function RecruiterDashboard() {
   ]);
   const [chatLoading, setChatLoading] = useState(false);
 
+  // Auth headers helper
+  const getAuthHeaders = useCallback((): Record<string, string> => {
+    const token = typeof window !== "undefined" ? (localStorage.getItem("apex_token") || localStorage.getItem("token")) : null;
+    return token && token !== "demo_jwt_token_2026" ? { "Authorization": `Bearer ${token}` } : {};
+  }, []);
+
   const fetchAll = useCallback(async () => {
     try {
+      const headers = getAuthHeaders();
       const [dRes, jRes, cRes, hRes, pRes, aRes] = await Promise.all([
-        fetch(`${API}/api/v1/recruiter/dashboard`),
-        fetch(`${API}/api/v1/recruiter/jobs`),
-        fetch(`${API}/api/v1/challenges/`),
-        fetch(`${API}/api/v1/candidate/hackathons`),
-        fetch(`${API}/api/v1/recruiter/pipeline`),
-        fetch(`${API}/api/v1/recruiter/analytics`),
+        fetch(`${API}/api/v1/recruiter/dashboard`, { headers }),
+        fetch(`${API}/api/v1/recruiter/jobs`, { headers }),
+        fetch(`${API}/api/v1/challenges/`, { headers }),
+        fetch(`${API}/api/v1/candidate/hackathons`, { headers }),
+        fetch(`${API}/api/v1/recruiter/pipeline`, { headers }),
+        fetch(`${API}/api/v1/recruiter/analytics`, { headers }),
       ]);
       if (dRes.ok) setDashboard(await dRes.json());
       if (jRes.ok) setJobs(await jRes.json());
@@ -175,7 +182,7 @@ export default function RecruiterDashboard() {
       if (pRes.ok) setPipeline(await pRes.json());
       if (aRes.ok) setAnalytics(await aRes.json());
     } catch (e) { console.error(e); }
-  }, []);
+  }, [getAuthHeaders]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -184,7 +191,7 @@ export default function RecruiterDashboard() {
     setSearching(true);
     try {
       const res = await fetch(`${API}/api/v1/recruiter/candidate-search`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ query })
       });
       if (res.ok) setCandidates(await res.json());
@@ -196,7 +203,9 @@ export default function RecruiterDashboard() {
     setSelectedCandidate(cand);
     setTab("intelligence");
     try {
-      const res = await fetch(`${API}/api/v1/recruiter/candidates/${cand.id}/intelligence`);
+      const res = await fetch(`${API}/api/v1/recruiter/candidates/${cand.id}/intelligence`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) setIntelligenceData(await res.json());
     } catch (e) {}
   };
@@ -206,7 +215,7 @@ export default function RecruiterDashboard() {
     setCreatingJob(true);
     try {
       const res = await fetch(`${API}/api/v1/recruiter/job/create`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           title: jobTitle, description: jobDesc,
           requirements: jobReqs.split(",").map(s => s.trim()).filter(Boolean),
@@ -223,7 +232,7 @@ export default function RecruiterDashboard() {
     setCreatingChal(true);
     try {
       const res = await fetch(`${API}/api/v1/challenges/create`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ title: chalTitle, description: chalDesc, challenge_type: chalType, deadline_days: 7 })
       });
       if (res.ok) { setChalCreated(true); setChalTitle(""); setChalDesc(""); fetchAll(); }
@@ -239,7 +248,7 @@ export default function RecruiterDashboard() {
     setChatLoading(true);
     try {
       const res = await fetch(`${API}/api/v1/ai/copilot`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ message: userMsg, conversation_history: [] })
       });
       if (res.ok) {
@@ -253,7 +262,7 @@ export default function RecruiterDashboard() {
   const moveStage = async (appId: number, stage: string) => {
     try {
       await fetch(`${API}/api/v1/recruiter/pipeline/${appId}/move`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ stage })
       });
       fetchAll();
