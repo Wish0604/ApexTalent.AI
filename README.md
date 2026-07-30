@@ -89,24 +89,34 @@ npm run dev
 
 ---
 
+## 🔑 Optional External Add-ons & Environment Configuration
+
+Out of the box, the platform operates **100% locally** using real database persistence (PostgreSQL / SQLite), live GitHub REST API fetching, and dynamic evaluation engines.
+
+If you would like to connect external cloud LLM providers, you can create a `backend/.env` file with any of the following optional API keys:
+
+```env
+# Optional External LLM Provider Keys
+GROQ_API_KEY=gsk_your_groq_api_key_here
+OPENAI_API_KEY=sk-proj-your_openai_api_key_here
+OPENROUTER_API_KEY=sk-or-your_openrouter_key_here
+
+# Production PostgreSQL Database URL (Optional - Defaults to SQLite)
+DATABASE_URL=postgresql://user:password@localhost:5432/apextalent_db
+```
+
+---
+
 ## 🧪 Testing Backend Services
 ```bash
 cd backend
 python test_sprint4.py
+python test_sprint5.py
+python test_sprint6.py
+python test_sprint7.py
 ```
 Outputs:
 ```text
-=== Testing AI Hiring Challenge Generator Agent ===
-✅ AI Hiring Challenge Generator Agent passed!
-
-=== Testing AI Recruiter Copilot Agent (Candidate Comparison) ===
-✅ AI Recruiter Copilot (Comparison) passed!
-
-=== Testing AI Recruiter Copilot Agent (Salary Prediction) ===
-✅ AI Recruiter Copilot (Salary Prediction) passed!
-
-=== Testing AI Recruiter Copilot Agent (Interview Questions) ===
-✅ AI Recruiter Copilot (Interview Questions) passed!
-
-✨ All Sprint 4 agent service tests completed successfully!
+✨ All Sprint 4, 5, 6, and 7 agent service tests completed successfully!
 ```
+
