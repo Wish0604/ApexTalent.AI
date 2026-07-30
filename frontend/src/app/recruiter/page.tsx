@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Briefcase, Search, Users, BarChart2, ArrowLeft, Cpu, Bell,
   LayoutDashboard, Zap, Trophy, MessageSquare, RefreshCw, CheckCircle,
-  TrendingUp, Target, Star, ChevronRight, ExternalLink, Send,
+  TrendingUp, Target, Star, ChevronRight, ExternalLink, Send, Mic,
   Plus, Layers, Clock, Award, GitBranch, Bot, Filter, DollarSign, FileText, Radio, Code2
 } from "lucide-react";
 import {
@@ -504,9 +504,19 @@ export default function RecruiterDashboard() {
                 </div>
 
                 {/* Actions */}
-                <div className="glass-panel p-5 rounded-2xl flex gap-3 flex-wrap">
+                <div className="glass-panel p-5 rounded-2xl flex gap-3 flex-wrap items-center">
                   <button className="btn-primary btn-emerald text-xs flex items-center gap-1.5" onClick={() => fetch(`${API}/api/v1/recruiter/candidate/${intelligenceData.id}/invite`, {method:"POST"})}>
                     <Send className="w-3.5 h-3.5" />Send Invite
+                  </button>
+                  <button 
+                    className="btn-primary text-xs flex items-center gap-1.5 bg-violet-600/80 hover:bg-violet-600 text-white" 
+                    onClick={() => {
+                      const url = `${window.location.origin}/candidate?tab=interviews&candidate_id=${intelligenceData.id}`;
+                      navigator.clipboard.writeText(url);
+                      alert("✓ Voice Interview Link copied to clipboard:\n" + url);
+                    }}
+                  >
+                    <Mic className="w-3.5 h-3.5" /> Copy Voice Interview Link
                   </button>
                   <button className="btn-ghost text-xs" onClick={() => setTab("pipeline")}>View in Pipeline →</button>
                 </div>

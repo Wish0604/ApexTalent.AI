@@ -15,6 +15,7 @@ import {
 } from "recharts";
 
 import CustomLoader from "../components/CustomLoader";
+import { useTabSwitchPrevention, TabSwitchWarningBanner } from "../components/TabSwitchPrevention";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -135,6 +136,56 @@ export default function CandidateDashboard() {
   const [interviewFeedback, setInterviewFeedback] = useState<string>("");
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [schedulingInterview, setSchedulingInterview] = useState(false);
+
+  // Voice AI & Proctored Telemetry State
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const { tabSwitchCount } = useTabSwitchPrevention();
+
+  const speakQuestion = (text: string) => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const startVoiceInput = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser. You can type your response!");
+      return;
+    }
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event: any) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (transcript) setAnswer(transcript);
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+      recognition.start();
+    } catch (e) {
+      setIsListening(false);
+    }
+  };
+
+  const stopVoiceInput = () => {
+    setIsListening(false);
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  };
 
   // Auth headers helper
   const getAuthHeaders = useCallback((): Record<string, string> => {
@@ -1028,10 +1079,24 @@ export default function CandidateDashboard() {
               </div>
             ) : (
               <div className="max-w-2xl mx-auto space-y-4 animate-fade-in">
+                {/* Proctored Anti-Cheating Telemetry Banner */}
+                <TabSwitchWarningBanner switchCount={tabSwitchCount} maxAllowed={3} />
+
                 <div className="glass-panel p-6 rounded-2xl space-y-2">
-                  <div className="flex justify-between text-xs text-slate-500">
+                  <div className="flex justify-between items-center text-xs text-slate-500">
                     <span>Question {currentQ + 1} of {activeInterview.total}</span>
-                    <span className="badge badge-violet capitalize">{activeInterview.interview_type}</span>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => {
+                          const questionText = activeInterview.current_question?.question || "";
+                          if (questionText) speakQuestion(questionText);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/30 text-violet-300 font-medium text-[11px] flex items-center gap-1 transition"
+                      >
+                        🔊 Read Question
+                      </button>
+                      <span className="badge badge-violet capitalize">{activeInterview.interview_type}</span>
+                    </div>
                   </div>
                   <div className="progress-track">
                     <div className="progress-fill progress-violet" style={{ width: `${((currentQ) / activeInterview.total) * 100}%` }} />
@@ -1039,12 +1104,12 @@ export default function CandidateDashboard() {
                 </div>
 
                 <div className="glass-panel p-6 rounded-2xl space-y-4">
-                  <div className="p-4 bg-slate-900/60 rounded-xl border border-violet-500/20">
+                  <div className="p-4 bg-slate-900/60 rounded-xl border border-violet-500/20 space-y-2">
                     <p className="text-sm font-semibold text-slate-200 leading-relaxed">
                       {activeInterview.current_question?.question || "Loading next question..."}
                     </p>
                     {activeInterview.current_question?.category && (
-                      <span className="badge badge-violet mt-2 inline-block">{activeInterview.current_question.category}</span>
+                      <span className="badge badge-violet inline-block">{activeInterview.current_question.category}</span>
                     )}
                   </div>
 
@@ -1052,13 +1117,32 @@ export default function CandidateDashboard() {
                     <div className="apex-alert-info text-xs">{interviewFeedback}</div>
                   )}
 
+                  {/* Voice Microphone Control Toolbar */}
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-white/5 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Mic className={`w-4 h-4 ${isListening ? "text-red-400 animate-pulse" : "text-violet-400"}`} />
+                      <span className="font-semibold text-slate-300">
+                        {isListening ? "🎙️ Listening & Transcribing Speech..." : "Voice Input Mode"}
+                      </span>
+                    </div>
+                    {isListening ? (
+                      <button onClick={stopVoiceInput} className="px-3 py-1.5 rounded-lg bg-red-600/30 border border-red-500/40 text-red-300 font-medium hover:bg-red-600/50">
+                        Stop Mic
+                      </button>
+                    ) : (
+                      <button onClick={startVoiceInput} className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1">
+                        <Mic className="w-3.5 h-3.5" /> Speak Answer
+                      </button>
+                    )}
+                  </div>
+
                   <textarea
                     value={answer}
                     onChange={e => setAnswer(e.target.value)}
-                    placeholder="Type your answer here. Be specific and use concrete examples..."
+                    placeholder="Type or speak your answer. Your speech will automatically transcribe into text..."
                     className="field-input min-h-32 resize-none text-sm"
                   />
-                  <button onClick={submitAnswer} disabled={!answer.trim()} className="btn-primary w-full flex items-center justify-center gap-2">
+                  <button onClick={() => { stopVoiceInput(); submitAnswer(); }} disabled={!answer.trim()} className="btn-primary w-full flex items-center justify-center gap-2">
                     <Send className="w-4 h-4" />
                     {currentQ + 1 >= activeInterview.total ? "Submit Final Answer" : "Next Question →"}
                   </button>
