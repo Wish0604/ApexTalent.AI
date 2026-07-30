@@ -359,8 +359,8 @@ class OrganizationProfile(Base):
     social_links_json = Column(Text, default="{}")
 
     user = relationship("User", back_populates="org_profile")
-    hackathons = relationship("Hackathon", back_populates="org")
-    events = relationship("Event", back_populates="org")
+    hackathons = relationship("Hackathon", foreign_keys="[Hackathon.org_id]", back_populates="org")
+    events = relationship("Event", foreign_keys="[Event.org_id]", back_populates="org")
 
 
 # =============================================================================
