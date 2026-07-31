@@ -366,6 +366,7 @@ app.add_middleware(
 
 # Register all routers
 app.include_router(auth.router,          prefix="/api/v1")
+app.include_router(auth.router)           # Direct OAuth callback support (/auth/github/callback)
 app.include_router(candidate.router,     prefix="/api/v1")
 app.include_router(recruiter.router,     prefix="/api/v1")
 app.include_router(organization.router,  prefix="/api/v1")

@@ -9,33 +9,43 @@ import urllib.request
 import urllib.parse
 import datetime
 from typing import Dict, Any, Optional, List
+from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from ..db import models
 
-GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "Ov23liXXXXXXXXXX")
-GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-GITHUB_REDIRECT_URI = os.getenv("GITHUB_REDIRECT_URI", "http://localhost:8000/api/v1/auth/github/callback")
+# Load environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../../.env"))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../../../.env"))
 
+def get_github_client_id() -> str:
+    return os.getenv("GITHUB_CLIENT_ID", "Ov23libOMD3FyZgIGDd8").strip()
 
-def get_github_oauth_url() -> str:
+def get_github_client_secret() -> str:
+    return os.getenv("GITHUB_CLIENT_SECRET", "e827c26e5330f08481a2e6dc17d2d433af182884").strip()
+
+def get_github_redirect_uri() -> str:
+    return os.getenv("GITHUB_REDIRECT_URI", "http://localhost:8000/api/v1/auth/github/callback").strip()
+
+def get_github_oauth_url(override_redirect_uri: Optional[str] = None) -> str:
     """Step 5: Constructs GitHub OAuth authorization URL."""
+    redirect_uri = override_redirect_uri or get_github_redirect_uri()
     params = {
-        "client_id": GITHUB_CLIENT_ID,
-        "redirect_uri": GITHUB_REDIRECT_URI,
+        "client_id": get_github_client_id(),
+        "redirect_uri": redirect_uri,
         "scope": "read:user user:email repo",
         "allow_signup": "true"
     }
     return f"https://github.com/login/oauth/authorize?{urllib.parse.urlencode(params)}"
 
-
-def exchange_code_for_token(code: str) -> Optional[str]:
+def exchange_code_for_token(code: str, override_redirect_uri: Optional[str] = None) -> Optional[str]:
     """Step 7: Exchange authorization code for access token."""
+    redirect_uri = override_redirect_uri or get_github_redirect_uri()
     url = "https://github.com/login/oauth/access_token"
     payload = json.dumps({
-        "client_id": GITHUB_CLIENT_ID,
-        "client_secret": GITHUB_CLIENT_SECRET,
+        "client_id": get_github_client_id(),
+        "client_secret": get_github_client_secret(),
         "code": code,
-        "redirect_uri": GITHUB_REDIRECT_URI
+        "redirect_uri": redirect_uri
     }).encode("utf-8")
 
     req = urllib.request.Request(
