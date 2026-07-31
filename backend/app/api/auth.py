@@ -76,6 +76,12 @@ def github_oauth_initiate():
     auth_url = github_oauth_service.get_github_oauth_url()
     return RedirectResponse(url=auth_url)
 
+@router.get("/github/url")
+def get_github_oauth_url():
+    """Returns the live GitHub OAuth Authorization URL."""
+    url = github_oauth_service.get_github_oauth_url()
+    return {"auth_url": url, "client_id": "Ov23libOMD3FyZgIGDd8"}
+
 @router.get("/github/callback")
 def github_oauth_callback(
     code: Optional[str] = None,

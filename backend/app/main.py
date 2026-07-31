@@ -1,7 +1,13 @@
 import sys
 import io
+import os
 import json
 import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../.env"))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../../.env"))
 
 # Force UTF-8 stdout on Windows to allow unicode in print statements
 if sys.platform == "win32":

@@ -351,8 +351,18 @@ export default function AuthModal({ isOpen, onClose, inline = false }: AuthModal
             </button>
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+                try {
+                  const res = await fetch(`${API}/api/v1/auth/github/url`);
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data.auth_url) {
+                      window.location.href = data.auth_url;
+                      return;
+                    }
+                  }
+                } catch (e) {}
                 window.location.href = `${API}/api/v1/auth/github`;
               }}
               className="py-2 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-medium text-white flex items-center justify-center gap-1.5 backdrop-blur-md transition cursor-pointer"

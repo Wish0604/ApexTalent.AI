@@ -530,7 +530,19 @@ export default function CandidateDashboard() {
                     <span className="flex items-center gap-1"><Github className="w-3 h-3 text-violet-400" />GitHub OAuth</span>
                   </label>
                   <button 
-                    onClick={() => { window.location.href = `${API}/api/v1/auth/github`; }}
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`${API}/api/v1/auth/github/url`);
+                        if (res.ok) {
+                          const data = await res.json();
+                          if (data.auth_url) {
+                            window.location.href = data.auth_url;
+                            return;
+                          }
+                        }
+                      } catch (e) {}
+                      window.location.href = `${API}/api/v1/auth/github`;
+                    }}
                     className="btn-primary bg-violet-600/30 hover:bg-violet-600/50 border border-violet-500/40 text-xs w-full py-2 flex items-center justify-center gap-1.5 text-violet-200 transition"
                   >
                     <Github className="w-3.5 h-3.5" /> Connect GitHub OAuth 2.0
