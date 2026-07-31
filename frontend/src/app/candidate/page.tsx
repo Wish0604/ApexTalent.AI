@@ -237,7 +237,21 @@ export default function CandidateDashboard() {
     } catch (e) { console.error(e); }
   }, [getAuthHeaders]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tokenParam = params.get("token");
+      const connectedParam = params.get("github_connected");
+      if (tokenParam) {
+        localStorage.setItem("apex_token", tokenParam);
+      }
+      if (connectedParam === "true") {
+        setProfileSavedMsg("✓ GitHub OAuth 2.0 Connected! Live telemetry scores & repositories synchronized.");
+        setTimeout(() => setProfileSavedMsg(""), 6000);
+      }
+    }
+    fetchAll();
+  }, [fetchAll]);
 
   const saveProfile = async () => {
     setSavingProfile(true); setProfileSavedMsg(""); setError("");
@@ -512,13 +526,15 @@ export default function CandidateDashboard() {
               <h3 className="text-sm font-bold text-slate-200">⚡ Quick Actions</h3>
               <div className="grid sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="field-label flex items-center gap-1"><Github className="w-3 h-3 text-violet-400" />GitHub Sync</label>
-                  <div className="flex gap-2">
-                    <input value={gitUsername} onChange={e => setGitUsername(e.target.value)} placeholder="username" className="field-input text-xs" />
-                    <button onClick={syncGitHub} disabled={syncingGit} className="btn-primary px-3 text-xs shrink-0">
-                      {syncingGit ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : "Sync"}
-                    </button>
-                  </div>
+                  <label className="field-label flex items-center justify-between">
+                    <span className="flex items-center gap-1"><Github className="w-3 h-3 text-violet-400" />GitHub OAuth</span>
+                  </label>
+                  <button 
+                    onClick={() => { window.location.href = `${API}/api/v1/auth/github`; }}
+                    className="btn-primary bg-violet-600/30 hover:bg-violet-600/50 border border-violet-500/40 text-xs w-full py-2 flex items-center justify-center gap-1.5 text-violet-200 transition"
+                  >
+                    <Github className="w-3.5 h-3.5" /> Connect GitHub OAuth 2.0
+                  </button>
                 </div>
                 <div className="space-y-2">
                   <label className="field-label flex items-center gap-1"><FileText className="w-3 h-3 text-emerald-400" />Resume Parse</label>

@@ -351,8 +351,11 @@ export default function AuthModal({ isOpen, onClose, inline = false }: AuthModal
             </button>
             <button
               type="button"
-              onClick={handleLoginSubmit}
-              className="py-2 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-medium text-white flex items-center justify-center gap-1.5 backdrop-blur-md transition"
+              onClick={() => {
+                const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+                window.location.href = `${API}/api/v1/auth/github`;
+              }}
+              className="py-2 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-medium text-white flex items-center justify-center gap-1.5 backdrop-blur-md transition cursor-pointer"
             >
               <GitBranch className="w-3.5 h-3.5 text-purple-300" />
               <span>GitHub</span>
