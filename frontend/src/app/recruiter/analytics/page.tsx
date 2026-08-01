@@ -1,25 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import {
   TrendingUp, BarChart2, PieChart, Users, ArrowLeft, RefreshCw,
   Building2, Zap, ShieldCheck, Target, LineChart,
-  LayoutDashboard, Search, Star, Briefcase, DollarSign, Layers, Bot, Cpu
+  LayoutDashboard, Search, Star, Briefcase, DollarSign, Layers, Bot, Cpu, FileText, Code2, Radio
 } from "lucide-react";
 
-function RecruiterSidebar({ active }: { active: string }) {
-  const items = [
-    { href: "/recruiter", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/recruiter/sourcing", label: "Outbound Headhunter", icon: Search },
-    { href: "/recruiter/candidate-intelligence", label: "Candidate Intel & PPT", icon: Star, id: "intel" },
-    { href: "/recruiter/job-management", label: "Job Management", icon: Briefcase, id: "jobs" },
-    { href: "/recruiter/offers", label: "Offer & Negotiation", icon: DollarSign, id: "offers" },
-    { href: "/recruiter/pipeline", label: "Hiring Pipeline", icon: Layers },
-    { href: "/recruiter/analytics", label: "Hiring Analytics", icon: BarChart2, id: "analytics" },
-    { href: "/recruiter/copilot", label: "AI Copilot", icon: Bot },
-  ];
+const RECRUITER_TABS = [
+  { href: "/recruiter", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/recruiter?tab=discover", label: "Talent Discovery", icon: Search },
+  { href: "/recruiter/sourcing", label: "Outbound Headhunter", icon: Search },
+  { href: "/recruiter/candidate-intelligence", label: "Candidate Intel", icon: Star, id: "intel" },
+  { href: "/recruiter/job-management", label: "Job Management", icon: Briefcase, id: "jobs" },
+  { href: "/recruiter/challenges", label: "Hiring Challenges", icon: Zap },
+  { href: "/recruiter/assessments", label: "Online Assessments", icon: FileText },
+  { href: "/recruiter/interview-simulator", label: "Live Code Simulator", icon: Cpu },
+  { href: "/recruiter/pair-programming", label: "Pair Programming", icon: Code2 },
+  { href: "/recruiter/offers", label: "Offer & Negotiation", icon: DollarSign, id: "offers" },
+  { href: "/recruiter/pipeline", label: "Hiring Pipeline", icon: Layers },
+  { href: "/recruiter/copilot", label: "AI Copilot", icon: Bot },
+  { href: "/recruiter/team", label: "Enterprise Team", icon: Users },
+  { href: "/recruiter/webhooks", label: "Webhooks Dispatch", icon: Radio },
+  { href: "/recruiter/analytics", label: "Hiring Analytics", icon: BarChart2, id: "analytics" },
+];
 
+function RecruiterSidebar({ active }: { active: string }) {
   return (
     <div className="portal-sidebar hidden md:block">
       <div className="px-4 py-5 border-b border-white/5 flex items-center gap-2.5">
@@ -29,20 +36,20 @@ function RecruiterSidebar({ active }: { active: string }) {
         <span className="font-bold text-sm gradient-text-emerald">Recruiter OS</span>
       </div>
 
-      <div className="flex-1 py-3 px-3 space-y-0.5">
+      <div className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
         <p className="section-title">Navigation</p>
-        {items.map((item, idx) => {
+        {RECRUITER_TABS.map((item, idx) => {
           const Icon = item.icon;
           const isActive = active === item.id;
           return (
             <Link
               key={idx}
               href={item.href}
-              className={`sidebar-item w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition ${
-                isActive ? "bg-emerald-600/30 text-emerald-200 border border-emerald-500/40" : "text-slate-400 hover:text-white hover:bg-white/5"
+              className={`sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                isActive ? "active" : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="w-3.5 h-3.5 shrink-0" />
               <span>{item.label}</span>
             </Link>
           );
@@ -54,15 +61,14 @@ function RecruiterSidebar({ active }: { active: string }) {
 
 export default function RecruiterAnalyticsPage() {
   return (
-    <div className="candidate-dashboard-bg relative min-h-screen text-slate-100 font-sans">
-      <div className="candidate-dashboard-overlay absolute inset-0 pointer-events-none" />
-      <div className="relative z-10 flex candidate-dashboard-container min-h-screen">
+    <div className="recruiter-dashboard-bg relative min-h-screen text-slate-100 font-sans">
+      <div className="recruiter-dashboard-overlay absolute inset-0 pointer-events-none" />
+      <div className="relative z-10 flex recruiter-dashboard-container min-h-screen">
         
         <RecruiterSidebar active="analytics" />
 
         <main className="portal-main px-6 py-8 max-w-7xl w-full space-y-6 animate-fade-in">
           
-          {/* Navigation Bar */}
           <div className="flex items-center justify-between border-b border-white/10 pb-6">
             <div className="flex items-center gap-3">
               <Link href="/recruiter" className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition">
@@ -70,14 +76,13 @@ export default function RecruiterAnalyticsPage() {
               </Link>
               <div>
                 <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-violet-400" /> Recruiter Hiring Analytics & Market Intelligence
+                  <TrendingUp className="w-6 h-6 text-emerald-400" /> Recruiter Hiring Analytics & Market Intelligence
                 </h1>
                 <p className="text-xs text-slate-400 mt-0.5">Pipeline funnel conversions, recruiter team benchmarks, skill demand trends, and time-to-fill analytics.</p>
               </div>
             </div>
           </div>
 
-          {/* Executive KPI Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Pipeline Candidates</span>
@@ -104,19 +109,18 @@ export default function RecruiterAnalyticsPage() {
             </div>
           </div>
 
-          {/* Funnel Analytics & Skill Demand */}
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-5">
               <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-                <BarChart2 className="w-4 h-4 text-violet-400" /> Pipeline Conversion Funnel
+                <BarChart2 className="w-4 h-4 text-emerald-400" /> Pipeline Conversion Funnel
               </h2>
               <div className="space-y-3.5 text-xs">
                 {[
-                  { stage: "Sourced Candidates", count: 412, pct: "100%", color: "bg-violet-500" },
+                  { stage: "Sourced Candidates", count: 412, pct: "100%", color: "bg-emerald-500" },
                   { stage: "AI Evaluated & Screened", count: 248, pct: "60.1%", color: "bg-indigo-500" },
-                  { stage: "Interview Conducted", count: 96, pct: "23.3%", color: "bg-emerald-500" },
+                  { stage: "Interview Conducted", count: 96, pct: "23.3%", color: "bg-violet-500" },
                   { stage: "Offers Extended", count: 32, pct: "7.7%", color: "bg-amber-500" },
-                  { stage: "Hired & Onboarded", count: 29, pct: "7.0%", color: "bg-pink-500" },
+                  { stage: "Hired & Onboarded", count: 29, pct: "7.0%", color: "bg-emerald-400" },
                 ].map((f, i) => (
                   <div key={i} className="space-y-1">
                     <div className="flex justify-between text-slate-300">
