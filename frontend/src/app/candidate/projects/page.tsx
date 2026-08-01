@@ -5,22 +5,26 @@ import Link from "next/link";
 import {
   FolderOpen, Plus, GitBranch, ExternalLink, Star, Code2, Eye,
   RefreshCw, CheckCircle, ArrowLeft, Terminal, FileText, Layers, ShieldCheck,
-  Cpu, Bell, LayoutDashboard, User, Briefcase, Map, Mic, Settings, Trophy, Award, BarChart3
+  Cpu, Bell, LayoutDashboard, User, Briefcase, Map, Mic, Settings, Trophy, Award, BarChart3, Network
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-function CandidateSidebar({ active }: { active: string }) {
-  const items = [
-    { href: "/candidate", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/candidate?tab=profile", label: "Profile Hub", icon: User },
-    { href: "/candidate/projects", label: "Projects & Telemetry", icon: FolderOpen, id: "projects" },
-    { href: "/candidate/talent-score", label: "Talent Score 360", icon: Award, id: "talent-score" },
-    { href: "/candidate/jobs", label: "Job Matches", icon: Briefcase, id: "jobs" },
-    { href: "/candidate/analytics", label: "Analytics & GitHub", icon: BarChart3, id: "analytics" },
-    { href: "/candidate/verification", label: "Verification & Badges", icon: ShieldCheck, id: "verification" },
-  ];
+const CANDIDATE_TABS = [
+  { href: "/candidate", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/candidate?tab=profile", label: "Profile Hub", icon: User },
+  { href: "/candidate?tab=skills", label: "Skill Intelligence", icon: Network },
+  { href: "/candidate/jobs", label: "Job Matches", icon: Briefcase, id: "jobs" },
+  { href: "/candidate/hackathons", label: "Hackathons", icon: Trophy, id: "hackathons" },
+  { href: "/candidate/projects", label: "Projects", icon: FolderOpen, id: "projects" },
+  { href: "/candidate/resume", label: "Resume & Portfolio", icon: FileText, id: "resume" },
+  { href: "/candidate/career", label: "Career Guidance", icon: Map, id: "career" },
+  { href: "/candidate/interview", label: "AI Interviews", icon: Mic, id: "interviews" },
+  { href: "/candidate/talent-score", label: "Talent Score 360", icon: Award, id: "talent-score" },
+  { href: "/candidate/analytics", label: "Analytics & GitHub", icon: BarChart3, id: "analytics" },
+];
 
+function CandidateSidebar({ active }: { active: string }) {
   return (
     <div className="portal-sidebar hidden md:block">
       <div className="px-4 py-5 border-b border-white/5 flex items-center gap-2.5">
@@ -30,20 +34,20 @@ function CandidateSidebar({ active }: { active: string }) {
         <span className="font-bold text-sm gradient-text-violet">Candidate Hub</span>
       </div>
 
-      <div className="flex-1 py-3 px-3 space-y-0.5">
+      <div className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
         <p className="section-title">Navigation</p>
-        {items.map((item, idx) => {
+        {CANDIDATE_TABS.map((item, idx) => {
           const Icon = item.icon;
-          const isActive = active === item.id || (active === "dashboard" && item.href === "/candidate");
+          const isActive = active === item.id;
           return (
             <Link
               key={idx}
               href={item.href}
-              className={`sidebar-item w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition ${
-                isActive ? "bg-violet-600/30 text-violet-200 border border-violet-500/40" : "text-slate-400 hover:text-white hover:bg-white/5"
+              className={`sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                isActive ? "active" : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="w-3.5 h-3.5 shrink-0" />
               <span>{item.label}</span>
             </Link>
           );
@@ -51,8 +55,12 @@ function CandidateSidebar({ active }: { active: string }) {
       </div>
 
       <div className="p-3 border-t border-white/5 space-y-0.5">
-        <Link href="/settings" className="sidebar-item w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-400 hover:text-slate-200">
-          <Settings className="w-4 h-4" />
+        <Link href="/candidate/verification" className="sidebar-item w-full flex items-center gap-2 text-emerald-400 hover:text-emerald-300">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>Verification & Badges</span>
+        </Link>
+        <Link href="/settings" className="sidebar-item w-full flex items-center gap-2 text-slate-400 hover:text-slate-200">
+          <Settings className="w-3.5 h-3.5" />
           <span>Account Settings</span>
         </Link>
       </div>
@@ -66,7 +74,6 @@ export default function CandidateProjectsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
-  // Add project form
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [techStack, setTechStack] = useState("");
@@ -136,7 +143,7 @@ export default function CandidateProjectsPage() {
   };
 
   return (
-    <div className="candidate-dashboard-bg relative min-h-screen text-slate-100 font-sans">
+    <div className="candidate-dashboard-bg relative min-h-screen">
       <div className="candidate-dashboard-overlay absolute inset-0 pointer-events-none" />
       <div className="relative z-10 flex candidate-dashboard-container min-h-screen">
         
@@ -144,7 +151,6 @@ export default function CandidateProjectsPage() {
 
         <main className="portal-main px-6 py-8 max-w-7xl w-full space-y-6 animate-fade-in">
           
-          {/* Header Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
             <div className="flex items-center gap-3">
               <Link href="/candidate" className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition">
@@ -165,7 +171,6 @@ export default function CandidateProjectsPage() {
             </button>
           </div>
 
-          {/* Top Summary Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Projects</span>
@@ -189,7 +194,6 @@ export default function CandidateProjectsPage() {
             </div>
           </div>
 
-          {/* Main Grid: Projects List + Project Details */}
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="space-y-4">
               <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Repository Showcase</h2>
@@ -296,7 +300,6 @@ export default function CandidateProjectsPage() {
         </main>
       </div>
 
-      {/* Add Project Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="glass-panel p-6 rounded-3xl max-w-lg w-full space-y-4 border border-white/20">

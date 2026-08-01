@@ -5,23 +5,31 @@ import Link from "next/link";
 import {
   Briefcase, Plus, MapPin, DollarSign, Users, Eye, ArrowLeft,
   CheckCircle, RefreshCw, Sparkles, Building2, Archive, Edit,
-  LayoutDashboard, Search, Star, Layers, BarChart2, Bot, Cpu
+  LayoutDashboard, Search, Star, Layers, BarChart2, Bot, Cpu,
+  FileText, Code2, Radio
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-function RecruiterSidebar({ active }: { active: string }) {
-  const items = [
-    { href: "/recruiter", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/recruiter/sourcing", label: "Outbound Headhunter", icon: Search },
-    { href: "/recruiter/candidate-intelligence", label: "Candidate Intel & PPT", icon: Star, id: "intel" },
-    { href: "/recruiter/job-management", label: "Job Management", icon: Briefcase, id: "jobs" },
-    { href: "/recruiter/offers", label: "Offer & Negotiation", icon: DollarSign, id: "offers" },
-    { href: "/recruiter/pipeline", label: "Hiring Pipeline", icon: Layers },
-    { href: "/recruiter/analytics", label: "Hiring Analytics", icon: BarChart2, id: "analytics" },
-    { href: "/recruiter/copilot", label: "AI Copilot", icon: Bot },
-  ];
+const RECRUITER_TABS = [
+  { href: "/recruiter", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/recruiter?tab=discover", label: "Talent Discovery", icon: Search },
+  { href: "/recruiter/sourcing", label: "Outbound Headhunter", icon: Search },
+  { href: "/recruiter/candidate-intelligence", label: "Candidate Intel", icon: Star, id: "intel" },
+  { href: "/recruiter/job-management", label: "Job Management", icon: Briefcase, id: "jobs" },
+  { href: "/recruiter/challenges", label: "Hiring Challenges", icon: Sparkles },
+  { href: "/recruiter/assessments", label: "Online Assessments", icon: FileText },
+  { href: "/recruiter/interview-simulator", label: "Live Code Simulator", icon: Cpu },
+  { href: "/recruiter/pair-programming", label: "Pair Programming", icon: Code2 },
+  { href: "/recruiter/offers", label: "Offer & Negotiation", icon: DollarSign, id: "offers" },
+  { href: "/recruiter/pipeline", label: "Hiring Pipeline", icon: Layers },
+  { href: "/recruiter/copilot", label: "AI Copilot", icon: Bot },
+  { href: "/recruiter/team", label: "Enterprise Team", icon: Users },
+  { href: "/recruiter/webhooks", label: "Webhooks Dispatch", icon: Radio },
+  { href: "/recruiter/analytics", label: "Hiring Analytics", icon: BarChart2, id: "analytics" },
+];
 
+function RecruiterSidebar({ active }: { active: string }) {
   return (
     <div className="portal-sidebar hidden md:block">
       <div className="px-4 py-5 border-b border-white/5 flex items-center gap-2.5">
@@ -31,20 +39,20 @@ function RecruiterSidebar({ active }: { active: string }) {
         <span className="font-bold text-sm gradient-text-emerald">Recruiter OS</span>
       </div>
 
-      <div className="flex-1 py-3 px-3 space-y-0.5">
+      <div className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
         <p className="section-title">Navigation</p>
-        {items.map((item, idx) => {
+        {RECRUITER_TABS.map((item, idx) => {
           const Icon = item.icon;
           const isActive = active === item.id;
           return (
             <Link
               key={idx}
               href={item.href}
-              className={`sidebar-item w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition ${
-                isActive ? "bg-emerald-600/30 text-emerald-200 border border-emerald-500/40" : "text-slate-400 hover:text-white hover:bg-white/5"
+              className={`sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                isActive ? "active" : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="w-3.5 h-3.5 shrink-0" />
               <span>{item.label}</span>
             </Link>
           );
@@ -59,7 +67,6 @@ export default function RecruiterJobManagementPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Form state
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("Apex Talent Corp");
   const [description, setDescription] = useState("");
@@ -122,15 +129,14 @@ export default function RecruiterJobManagementPage() {
   };
 
   return (
-    <div className="candidate-dashboard-bg relative min-h-screen text-slate-100 font-sans">
-      <div className="candidate-dashboard-overlay absolute inset-0 pointer-events-none" />
-      <div className="relative z-10 flex candidate-dashboard-container min-h-screen">
+    <div className="recruiter-dashboard-bg relative min-h-screen">
+      <div className="recruiter-dashboard-overlay absolute inset-0 pointer-events-none" />
+      <div className="relative z-10 flex recruiter-dashboard-container min-h-screen">
         
         <RecruiterSidebar active="jobs" />
 
         <main className="portal-main px-6 py-8 max-w-7xl w-full space-y-6 animate-fade-in">
           
-          {/* Navigation Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
             <div className="flex items-center gap-3">
               <Link href="/recruiter" className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition">
@@ -138,7 +144,7 @@ export default function RecruiterJobManagementPage() {
               </Link>
               <div>
                 <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                  <Briefcase className="w-6 h-6 text-violet-400" /> Job Requisition & Posting Studio
+                  <Briefcase className="w-6 h-6 text-emerald-400" /> Job Requisition & Posting Studio
                 </h1>
                 <p className="text-xs text-slate-400 mt-0.5">Manage active job openings, applicant pipelines, AI criteria matching, and archived postings.</p>
               </div>
@@ -148,12 +154,11 @@ export default function RecruiterJobManagementPage() {
             </button>
           </div>
 
-          {/* Top Summary Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Active Job Postings</span>
               <div className="text-2xl font-black text-white">{jobs.length}</div>
-              <p className="text-[10px] text-violet-400">Live on Candidate Portal</p>
+              <p className="text-[10px] text-emerald-400">Live on Candidate Portal</p>
             </div>
             <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Applicants</span>
@@ -172,7 +177,6 @@ export default function RecruiterJobManagementPage() {
             </div>
           </div>
 
-          {/* Job Postings List */}
           <div className="space-y-4">
             <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Active Requisitions</h2>
 
@@ -180,7 +184,7 @@ export default function RecruiterJobManagementPage() {
 
             <div className="grid md:grid-cols-2 gap-6">
               {jobs.map((job, idx) => (
-                <div key={job.id || idx} className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4 hover:border-violet-500/40 transition">
+                <div key={job.id || idx} className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4 hover:border-emerald-500/40 transition">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <h3 className="font-bold text-white text-base">{job.title}</h3>
@@ -204,7 +208,7 @@ export default function RecruiterJobManagementPage() {
                   <div className="flex items-center justify-between border-t border-white/10 pt-4 text-xs text-slate-400">
                     <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-500" />{job.location || "Remote"}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-violet-400 font-bold flex items-center gap-1">
+                      <span className="text-emerald-400 font-bold flex items-center gap-1">
                         <Users className="w-3.5 h-3.5" /> 24 Applicants
                       </span>
                     </div>
@@ -217,12 +221,11 @@ export default function RecruiterJobManagementPage() {
         </main>
       </div>
 
-      {/* Create Job Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="glass-panel p-6 rounded-3xl max-w-lg w-full space-y-4 border border-white/20">
             <h2 className="text-lg font-black text-white flex items-center gap-2">
-              <Plus className="w-5 h-5 text-violet-400" /> Create Job Requisition
+              <Plus className="w-5 h-5 text-emerald-400" /> Create Job Requisition
             </h2>
             {msg && <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-300 text-xs font-semibold">{msg}</div>}
             <form onSubmit={handleCreateJob} className="space-y-3 text-xs">

@@ -8,17 +8,21 @@ import {
   LayoutDashboard, Trophy, Network, Award, GitBranch, UserCheck, BarChart2, Cpu, Brain
 } from "lucide-react";
 
-function OrganizationSidebar({ active }: { active: string }) {
-  const items = [
-    { href: "/organization", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/organization/events", label: "Events & Webinars", icon: Calendar, id: "events" },
-    { href: "/organization/hackathons", label: "Hackathons", icon: Trophy, id: "hackathons" },
-    { href: "/organization/team-builder", label: "AI Team Builder", icon: Network, id: "teams" },
-    { href: "/organization/evaluations", label: "AI Evaluations", icon: Brain, id: "evaluations" },
-    { href: "/organization/certificates", label: "Certificates & Badges", icon: Award, id: "certificates" },
-    { href: "/organization/analytics", label: "Community Analytics", icon: BarChart2, id: "analytics" },
-  ];
+const COMMUNITY_TABS = [
+  { href: "/organization", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/organization?tab=members", label: "Members", icon: Users },
+  { href: "/organization/events", label: "Events & Webinars", icon: Calendar, id: "events" },
+  { href: "/organization/hackathons", label: "Hackathons", icon: Trophy, id: "hackathons" },
+  { href: "/organization/team-builder", label: "AI Team Builder", icon: Network, id: "teams" },
+  { href: "/organization/evaluations", label: "AI Evaluations", icon: Brain, id: "evaluations" },
+  { href: "/organization/certificates", label: "Certificates & Badges", icon: Award, id: "certificates" },
+  { href: "/organization?tab=leaderboard", label: "Leaderboard", icon: Award },
+  { href: "/organization?tab=projects", label: "Project Gallery", icon: GitBranch },
+  { href: "/organization?tab=connect", label: "Recruiter Connect", icon: UserCheck },
+  { href: "/organization/analytics", label: "Community Analytics", icon: BarChart2, id: "analytics" },
+];
 
+function OrganizationSidebar({ active }: { active: string }) {
   return (
     <div className="portal-sidebar hidden md:block">
       <div className="px-4 py-5 border-b border-white/5 flex items-center gap-2.5">
@@ -28,20 +32,20 @@ function OrganizationSidebar({ active }: { active: string }) {
         <span className="font-bold text-sm gradient-text-gold">Community HQ</span>
       </div>
 
-      <div className="flex-1 py-3 px-3 space-y-0.5">
+      <div className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
         <p className="section-title">Navigation</p>
-        {items.map((item, idx) => {
+        {COMMUNITY_TABS.map((item, idx) => {
           const Icon = item.icon;
           const isActive = active === item.id;
           return (
             <Link
               key={idx}
               href={item.href}
-              className={`sidebar-item w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition ${
-                isActive ? "bg-amber-600/30 text-amber-200 border border-amber-500/40" : "text-slate-400 hover:text-white hover:bg-white/5"
+              className={`sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                isActive ? "active-indigo" : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="w-3.5 h-3.5 shrink-0" />
               <span>{item.label}</span>
             </Link>
           );
@@ -104,15 +108,14 @@ export default function OrganizationEventsPage() {
   };
 
   return (
-    <div className="candidate-dashboard-bg relative min-h-screen text-slate-100 font-sans">
-      <div className="candidate-dashboard-overlay absolute inset-0 pointer-events-none" />
-      <div className="relative z-10 flex candidate-dashboard-container min-h-screen">
+    <div className="community-dashboard-bg relative min-h-screen">
+      <div className="community-dashboard-overlay absolute inset-0 pointer-events-none" />
+      <div className="relative z-10 flex community-dashboard-container min-h-screen">
         
         <OrganizationSidebar active="events" />
 
         <main className="portal-main px-6 py-8 max-w-7xl w-full space-y-6 animate-fade-in">
           
-          {/* Navigation Bar */}
           <div className="flex items-center justify-between border-b border-white/10 pb-6">
             <div className="flex items-center gap-3">
               <Link href="/organization" className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition">
@@ -130,7 +133,6 @@ export default function OrganizationEventsPage() {
             </button>
           </div>
 
-          {/* Top Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Upcoming Events</span>
@@ -154,7 +156,6 @@ export default function OrganizationEventsPage() {
             </div>
           </div>
 
-          {/* Events Grid */}
           <div className="space-y-4">
             <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Scheduled Events</h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -184,7 +185,6 @@ export default function OrganizationEventsPage() {
         </main>
       </div>
 
-      {/* Create Event Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="glass-panel p-6 rounded-3xl max-w-lg w-full space-y-4 border border-white/20">
