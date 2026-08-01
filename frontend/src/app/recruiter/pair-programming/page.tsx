@@ -1,13 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   Code2, ArrowLeft, RefreshCw, Sparkles, CheckCircle, Terminal,
-  Zap, ShieldCheck, Play, Bot, ChevronRight, Layers, FileCode
+  Zap, ShieldCheck, Play, Bot, ChevronRight, Layers, FileCode,
+  LayoutDashboard, Search, Star, Briefcase, FileText, Cpu, DollarSign, Users, Radio, BarChart2
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+const RECRUITER_TABS = [
+  { href: "/recruiter", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/recruiter?tab=discover", label: "Talent Discovery", icon: Search },
+  { href: "/recruiter/sourcing", label: "Outbound Headhunter", icon: Search },
+  { href: "/recruiter/candidate-intelligence", label: "Candidate Intel", icon: Star, id: "intel" },
+  { href: "/recruiter/job-management", label: "Job Management", icon: Briefcase, id: "jobs" },
+  { href: "/recruiter/challenges", label: "Hiring Challenges", icon: Zap, id: "challenges" },
+  { href: "/recruiter/assessments", label: "Online Assessments", icon: FileText, id: "assessments" },
+  { href: "/recruiter/interview-simulator", label: "Live Code Simulator", icon: Cpu, id: "simulator" },
+  { href: "/recruiter/pair-programming", label: "Pair Programming", icon: Code2, id: "pair" },
+  { href: "/recruiter/offers", label: "Offer & Negotiation", icon: DollarSign, id: "offers" },
+  { href: "/recruiter/pipeline", label: "Hiring Pipeline", icon: Layers, id: "pipeline" },
+  { href: "/recruiter/copilot", label: "AI Copilot", icon: Bot, id: "copilot" },
+  { href: "/recruiter/team", label: "Enterprise Team", icon: Users },
+  { href: "/recruiter/webhooks", label: "Webhooks Dispatch", icon: Radio },
+  { href: "/recruiter/analytics", label: "Hiring Analytics", icon: BarChart2, id: "analytics" },
+];
+
+function RecruiterSidebar({ active }: { active: string }) {
+  return (
+    <div className="portal-sidebar hidden md:block">
+      <div className="px-4 py-5 border-b border-white/5 flex items-center gap-2.5">
+        <div className="p-1.5 bg-emerald-600/20 rounded-lg border border-emerald-500/30">
+          <Cpu className="w-4 h-4 text-emerald-400" />
+        </div>
+        <span className="font-bold text-sm gradient-text-emerald">Recruiter OS</span>
+      </div>
+
+      <div className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
+        <p className="section-title">Navigation</p>
+        {RECRUITER_TABS.map((item, idx) => {
+          const Icon = item.icon;
+          const isActive = active === item.id;
+          return (
+            <Link
+              key={idx}
+              href={item.href}
+              className={`sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                isActive ? "active" : "text-slate-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 const DEFAULT_PAIR_CODE = `import asyncio
 from typing import Dict, Any
@@ -40,7 +92,7 @@ export default function PairProgrammingPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/api/v1/recruiter/pair-programming/session`, {
+      const res = await fetch(`${API}/api/v1/recruiter/pair-programming/copilot`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,148 +117,72 @@ export default function PairProgrammingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col font-sans selection:bg-emerald-500/30">
-      {/* Top Navbar */}
-      <header className="border-b border-white/10 bg-[#0d1322]/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/recruiter" className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
-              <Code2 className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg text-white leading-tight flex items-center gap-2">
-                Live Collaborative Pair Programming Sandbox
-                <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">
-                  AI Copilot Monitor
-                </span>
-              </h1>
-              <p className="text-xs text-slate-400">Collaborative code editor sandbox with real-time AI optimization hints and refactoring advice</p>
+    <div className="recruiter-dashboard-bg relative min-h-screen text-slate-100 font-sans">
+      <div className="recruiter-dashboard-overlay absolute inset-0 pointer-events-none" />
+      <div className="relative z-10 flex recruiter-dashboard-container min-h-screen">
+        
+        <RecruiterSidebar active="pair" />
+
+        <main className="portal-main px-6 py-8 max-w-7xl w-full space-y-6 animate-fade-in">
+          
+          <div className="flex items-center justify-between border-b border-white/10 pb-6">
+            <div className="flex items-center gap-3">
+              <Link href="/recruiter" className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <div>
+                <h1 className="text-2xl font-black text-white flex items-center gap-2">
+                  <Code2 className="w-6 h-6 text-emerald-400" /> Live Pair Programming Assistant
+                </h1>
+                <p className="text-xs text-slate-400 mt-0.5">Real-time collaborative code review, Socratic hinting, bug detection & refactoring copilot.</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/recruiter/pipeline"
-            className="px-4 py-2 text-xs font-semibold rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition flex items-center gap-1.5"
-          >
-            <Layers className="w-3.5 h-3.5 text-emerald-400" />
-            Pipeline Board
-          </Link>
-        </div>
-      </header>
-
-      {/* Main Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Code Editor Panel */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="p-5 rounded-2xl bg-[#0d1322] border border-white/10 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-200">Pair Sandbox Editor</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-emerald-400" /> Collaborative Code Editor
+                </h2>
+                <span className="badge badge-emerald text-xs font-mono">Python 3.12</span>
               </div>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="px-2.5 py-1 text-xs bg-white/5 border border-white/10 rounded-lg text-slate-200 focus:outline-none"
-              >
-                <option value="python" className="bg-[#0d1322]">Python 3.12</option>
-                <option value="typescript" className="bg-[#0d1322]">TypeScript</option>
-              </select>
-            </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Active Scenario / Task Title</label>
-              <input
-                type="text"
-                value={problemTitle}
-                onChange={(e) => setProblemTitle(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white focus:outline-none"
+              <textarea
+                value={code}
+                onChange={e => setCode(e.target.value)}
+                rows={12}
+                className="p-4 bg-slate-950/90 border border-slate-800 rounded-xl font-mono text-xs text-emerald-300 w-full resize-none leading-relaxed"
               />
+
+              <button
+                onClick={handleRunCopilot}
+                disabled={loading}
+                className="btn-primary w-full py-2.5 text-xs flex items-center justify-center gap-2"
+              >
+                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <>Ask AI Pair Programming Assistant <Bot className="w-3.5 h-3.5" /></>}
+              </button>
             </div>
 
-            <textarea
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              rows={16}
-              className="w-full p-4 rounded-xl bg-black/40 border border-white/10 text-emerald-300 font-mono text-xs focus:outline-none focus:border-emerald-500/60 leading-relaxed resize-none shadow-inner"
-            />
-
-            <button
-              onClick={handleRunCopilot}
-              disabled={loading || !code.trim()}
-              className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  Analyzing Code Pair Session...
-                </>
+            <div>
+              {copilotData ? (
+                <div className="glass-panel p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-5 animate-fade-in">
+                  <h2 className="text-lg font-black text-white">AI Pair Feedback & Socratic Hints</h2>
+                  <div className="p-4 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-300">
+                    <p>{copilotData.hint || "Consider maintaining a timestamped sliding queue per IP instead of a static counter."}</p>
+                  </div>
+                </div>
               ) : (
-                <>
-                  <Bot className="w-4 h-4" />
-                  Request AI Pair Copilot Feedback
-                </>
+                <div className="glass-panel p-12 text-center rounded-2xl text-slate-500 italic space-y-2">
+                  <Bot className="w-8 h-8 mx-auto text-slate-600" />
+                  <p>Click "Ask AI Pair Programming Assistant" for live code review feedback.</p>
+                </div>
               )}
-            </button>
+            </div>
           </div>
-        </div>
 
-        {/* AI Copilot Side Panel */}
-        <div className="lg:col-span-5 space-y-6">
-          {copilotData ? (
-            <div className="p-6 rounded-2xl bg-[#0d1322] border border-emerald-500/30 space-y-5 animate-in fade-in">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                  <Bot className="w-4 h-4" />
-                  AI Pair Copilot Telemetry
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  {copilotData.pairing_status}
-                </span>
-              </div>
-
-              {/* Suggestions List */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Optimization & Style Hints</h3>
-                <div className="space-y-2">
-                  {copilotData.suggestions?.map((sugg: any, idx: number) => (
-                    <div key={idx} className="p-3.5 rounded-xl bg-white/5 border border-white/5 space-y-1 text-xs">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">{sugg.type}</span>
-                      <p className="font-semibold text-white">{sugg.title}</p>
-                      <p className="text-slate-400 text-[11px] leading-relaxed">{sugg.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Refactored Preview */}
-              {copilotData.refactored_preview && (
-                <div className="space-y-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">AI Refactored Preview</h3>
-                  <pre className="p-3 rounded-xl bg-black/40 border border-white/5 text-[11px] font-mono text-emerald-300 overflow-x-auto leading-relaxed max-h-48 overflow-y-auto">
-                    {copilotData.refactored_preview}
-                  </pre>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="h-full min-h-[450px] rounded-2xl bg-[#0d1322]/50 border border-dashed border-white/10 flex flex-col items-center justify-center p-8 text-center space-y-3">
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                <Bot className="w-8 h-8 text-emerald-400" />
-              </div>
-              <h3 className="text-base font-bold text-white">AI Pair Copilot Sandbox</h3>
-              <p className="text-xs text-slate-400 max-w-md">
-                Type code in the editor on the left and click **Request AI Pair Copilot Feedback** for real-time refactoring hints and security suggestions.
-              </p>
-            </div>
-          )}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
