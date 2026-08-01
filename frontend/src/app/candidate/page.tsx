@@ -334,14 +334,23 @@ export default function CandidateDashboard() {
     finally { setApplyingJob(null); }
   };
 
+  const [joiningHackId, setJoiningHackId] = useState<number | null>(null);
+
   const joinHackathon = async (hackId: number) => {
+    setJoiningHackId(hackId);
     try {
-      await fetch(`${API}/api/v1/candidate/hackathon/${hackId}/join`, {
+      const res = await fetch(`${API}/api/v1/candidate/hackathon/${hackId}/join`, {
         method: "POST",
         headers: getAuthHeaders()
       });
-      fetchAll();
-    } catch (e) {}
+      if (res.ok) {
+        setHackathons(prev => prev.map(h => h.id === hackId ? { ...h, is_registered: true } : h));
+        fetchAll();
+      }
+    } catch (e) {
+    } finally {
+      setJoiningHackId(null);
+    }
   };
 
   const generateResume = async () => {
@@ -874,9 +883,29 @@ export default function CandidateDashboard() {
                       ))}
                     </div>
                   )}
-                  <button onClick={() => joinHackathon(h.id)} className="btn-primary w-full text-xs">
-                    Register for Hackathon →
-                  </button>
+                  {h.is_registered ? (
+                    <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
+                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center justify-between">
+                        <span>✓ Officially Registered</span>
+                        <span className="text-[10px] opacity-80">{h.participant_count || 1} Participants</span>
+                      </div>
+                      <Link href="/candidate/hackathons" className="btn-primary w-full text-xs text-center justify-center">
+                        Submit Deliverables & Repo →
+                      </Link>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => joinHackathon(h.id)}
+                      disabled={joiningHackId === h.id}
+                      className="btn-primary w-full text-xs flex items-center justify-center gap-2"
+                    >
+                      {joiningHackId === h.id ? (
+                        <>Registering... <RefreshCw className="w-3.5 h-3.5 animate-spin" /></>
+                      ) : (
+                        "Register for Hackathon →"
+                      )}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

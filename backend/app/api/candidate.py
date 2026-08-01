@@ -236,6 +236,14 @@ def get_available_hackathons(
     current_user: models.User = Depends(security.get_current_user),
     db: Session = Depends(get_db)
 ):
+    profile = db.query(models.CandidateProfile).filter(models.CandidateProfile.user_id == current_user.id).first()
+    candidate_id = profile.id if profile else 0
+
+    registered_ids = set()
+    if candidate_id:
+        parts = db.query(models.EventParticipant.hackathon_id).filter(models.EventParticipant.candidate_id == candidate_id).all()
+        registered_ids = {p[0] for p in parts}
+
     hackathons = db.query(models.Hackathon).all()
     results = []
     for h in hackathons:
@@ -250,6 +258,8 @@ def get_available_hackathons(
             "start_date": h.start_date.isoformat() if h.start_date else None,
             "end_date": h.end_date.isoformat() if h.end_date else None,
             "problem_tracks": json.loads(h.problem_tracks_json) if h.problem_tracks_json else [],
+            "is_registered": h.id in registered_ids,
+            "participant_count": db.query(models.EventParticipant).filter(models.EventParticipant.hackathon_id == h.id).count()
         })
     return results
 
@@ -262,7 +272,18 @@ def join_hackathon(
 ):
     profile = db.query(models.CandidateProfile).filter(models.CandidateProfile.user_id == current_user.id).first()
     if not profile:
-        raise HTTPException(status_code=404, detail="Candidate profile not found")
+        profile = models.CandidateProfile(
+            user_id=current_user.id,
+            full_name=current_user.email.split("@")[0].capitalize(),
+            title="Software Engineering Candidate",
+            skills_json=json.dumps(["Python", "React"]),
+            projects_json="[]", education_json="[]", experience_json="[]",
+            certifications_json="[]", achievements_json="[]", hackathon_results_json="[]",
+            github_stats_json="{}", verification_badges_json="[]"
+        )
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
 
     hackathon = db.query(models.Hackathon).filter(models.Hackathon.id == hackathon_id).first()
     if not hackathon:
@@ -273,7 +294,7 @@ def join_hackathon(
         models.EventParticipant.candidate_id == profile.id
     ).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Already registered for this hackathon")
+        return {"message": "Already registered for this hackathon", "hackathon_id": hackathon_id, "is_registered": True}
 
     participant = models.EventParticipant(hackathon_id=hackathon_id, candidate_id=profile.id)
     db.add(participant)
@@ -286,8 +307,16 @@ def join_hackathon(
         action_url="/candidate?tab=hackathons"
     )
     db.add(notif)
+    
+    # Try dispatching email notification
+    try:
+        from ..services.notification_service import NotificationService
+        NotificationService.dispatch_hackathon_registration(db, current_user, hackathon.title)
+    except Exception as e:
+        print(f"Notification error: {e}")
+
     db.commit()
-    return {"message": "Successfully registered", "hackathon_id": hackathon_id}
+    return {"message": "Successfully registered", "hackathon_id": hackathon_id, "is_registered": True}
 
 
 @router.get("/interviews")
