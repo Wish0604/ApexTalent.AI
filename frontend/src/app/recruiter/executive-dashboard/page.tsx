@@ -16,7 +16,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const RECRUITER_TABS = [
   { href: "/recruiter", label: "Dashboard", icon: LayoutDashboard },
   { href: "/recruiter?tab=discover", label: "Talent Discovery", icon: Search },
-  { href: "/recruiter/sourcing", label: "Outbound Headhunter", icon: Search },
+
   { href: "/recruiter/candidate-intelligence", label: "Candidate Intel", icon: Star, id: "intel" },
   { href: "/recruiter/job-management", label: "Job Management", icon: Briefcase, id: "jobs" },
   { href: "/recruiter/challenges", label: "Hiring Challenges", icon: Zap, id: "challenges" },

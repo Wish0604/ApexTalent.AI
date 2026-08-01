@@ -21,14 +21,12 @@ const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const TABS = [
   { id: "dashboard",    label: "Dashboard",          icon: LayoutDashboard },
   { id: "discover",     label: "Talent Discovery",   icon: Search },
-  { id: "sourcing",     label: "Outbound Headhunter",icon: Search, href: "/recruiter/sourcing" },
   { id: "intelligence", label: "Candidate Intel",    icon: Star },
   { id: "jobs",         label: "Job Management",     icon: Briefcase },
   { id: "challenges",   label: "Hiring Challenges",  icon: Zap, href: "/recruiter/challenges" },
   { id: "assessments",  label: "Online Assessments", icon: FileText, href: "/recruiter/assessments" },
   { id: "simulator",    label: "Live Code Simulator",icon: Cpu, href: "/recruiter/interview-simulator" },
   { id: "pair",         label: "Pair Programming",   icon: Code2, href: "/recruiter/pair-programming" },
-  { id: "offer",        label: "Offer & Negotiation",icon: DollarSign, href: "/recruiter/offer-copilot" },
   { id: "pipeline",     label: "Hiring Pipeline",    icon: Layers, href: "/recruiter/pipeline" },
   { id: "copilot",      label: "AI Copilot",         icon: Bot, href: "/recruiter/copilot" },
   { id: "team",         label: "Enterprise Team",    icon: Users, href: "/recruiter/team" },
@@ -147,9 +145,16 @@ export default function RecruiterDashboard() {
   const [creatingChal, setCreatingChal] = useState(false);
   const [chalCreated, setChalCreated] = useState(false);
 
-  // Search
+  // Search & Sourcing
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
+  const [discoverSubTab, setDiscoverSubTab] = useState<"search" | "headhunter">("search");
+  const [hhRoleTitle, setHhRoleTitle] = useState("FastAPI Backend Systems Architect");
+  const [hhSkills, setHhSkills] = useState("FastAPI, Python, Docker, Redis");
+  const [hhMinScore, setHhMinScore] = useState(80);
+  const [hhSourcing, setHhSourcing] = useState(false);
+  const [hhSourcedData, setHhSourcedData] = useState<any>(null);
+  const [hhCopiedIdx, setHhCopiedIdx] = useState<number | null>(null);
 
   // Copilot
   const [chatInput, setChatInput] = useState("");
@@ -197,6 +202,27 @@ export default function RecruiterDashboard() {
       if (res.ok) setCandidates(await res.json());
     } catch (e) {}
     finally { setSearching(false); }
+  };
+
+  const runHeadhunterAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hhRoleTitle.trim()) return;
+    setHhSourcing(true);
+    setHhSourcedData(null);
+    try {
+      const skills = hhSkills.split(",").map(s => s.trim()).filter(Boolean);
+      const res = await fetch(`${API}/api/v1/recruiter/headhunter/sourcing-agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          role_title: hhRoleTitle,
+          required_skills: skills,
+          min_talent_score: hhMinScore
+        })
+      });
+      if (res.ok) setHhSourcedData(await res.json());
+    } catch (e) {}
+    finally { setHhSourcing(false); }
   };
 
   const loadIntelligence = async (cand: any) => {
@@ -349,36 +375,174 @@ export default function RecruiterDashboard() {
           </div>
         )}
 
-        {/* ── TALENT DISCOVERY ─────────────────────────────────────────── */}
+        {/* ── TALENT DISCOVERY & OUTBOUND HEADHUNTER ─────────────────────────────── */}
         {tab === "discover" && (
           <div className="space-y-6">
-            <h1 className="text-xl font-black text-white">Talent Discovery</h1>
-            <div className="glass-panel p-6 rounded-2xl space-y-4">
-              <p className="text-xs text-slate-400">Natural language search — Try: "FastAPI engineers above 85 score" or "open to work ML engineers"</p>
-              <div className="flex gap-2">
-                <input value={query} onChange={e => setQuery(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && searchCandidates()}
-                  placeholder='e.g., "Top Python engineers available now"'
-                  className="field-input flex-1" />
-                <button onClick={searchCandidates} disabled={searching} className="btn-primary btn-emerald px-5">
-                  {searching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+              <div>
+                <h1 className="text-xl font-black text-white">Talent Discovery & Sourcing</h1>
+                <p className="text-xs text-slate-400">Database talent search & autonomous AI outbound headhunter.</p>
+              </div>
+
+              {/* Simple Toggle Bar */}
+              <div className="flex bg-slate-900/90 p-1 rounded-xl border border-white/10">
+                <button
+                  onClick={() => setDiscoverSubTab("search")}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    discoverSubTab === "search" ? "bg-emerald-600 text-white shadow" : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  🔍 Instant Talent Search
+                </button>
+                <button
+                  onClick={() => setDiscoverSubTab("headhunter")}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    discoverSubTab === "headhunter" ? "bg-emerald-600 text-white shadow" : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  ⚡ AI Outbound Headhunter
                 </button>
               </div>
             </div>
 
-            {candidates.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-xs text-slate-500">{candidates.length} candidate(s) found</p>
-                {candidates.map((c: any, i: number) => (
-                  <div key={c.id} className="animate-slide-up" style={{ animationDelay: `${i * 0.04}s` }}>
-                    <CandidateCard cand={c} onSelect={loadIntelligence} />
+            {discoverSubTab === "search" ? (
+              <div className="space-y-6">
+                <div className="glass-panel p-6 rounded-2xl space-y-4">
+                  <p className="text-xs text-slate-400">Natural language search — Try: "FastAPI engineers above 85 score" or "open to work ML engineers"</p>
+                  <div className="flex gap-2">
+                    <input value={query} onChange={e => setQuery(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && searchCandidates()}
+                      placeholder='e.g., "Top Python engineers available now"'
+                      className="field-input flex-1" />
+                    <button onClick={searchCandidates} disabled={searching} className="btn-primary btn-emerald px-5">
+                      {searching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    </button>
                   </div>
-                ))}
+                </div>
+
+                {candidates.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-xs text-slate-500">{candidates.length} candidate(s) found</p>
+                    {candidates.map((c: any, i: number) => (
+                      <div key={c.id} className="animate-slide-up" style={{ animationDelay: `${i * 0.04}s` }}>
+                        <CandidateCard cand={c} onSelect={loadIntelligence} />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="glass-panel p-10 rounded-2xl text-center text-slate-500 text-sm">
+                    Search for talent using natural language. Results will appear here.
+                  </div>
+                )}
               </div>
-            )}
-            {candidates.length === 0 && (
-              <div className="glass-panel p-10 rounded-2xl text-center text-slate-500 text-sm">
-                Search for talent using natural language. Results will appear here.
+            ) : (
+              <div className="space-y-6">
+                <div className="glass-panel p-6 rounded-2xl space-y-4 border border-white/10">
+                  <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-emerald-400" /> Autonomous Outbound Headhunter Sourcing
+                  </h2>
+
+                  <form onSubmit={runHeadhunterAgent} className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <label className="field-label">Target Role Title</label>
+                      <input
+                        type="text"
+                        value={hhRoleTitle}
+                        onChange={e => setHhRoleTitle(e.target.value)}
+                        placeholder="e.g. Lead Backend Engineer"
+                        className="field-input w-full mt-1"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="field-label">Required Tech Stack (comma-separated)</label>
+                      <input
+                        type="text"
+                        value={hhSkills}
+                        onChange={e => setHhSkills(e.target.value)}
+                        placeholder="FastAPI, Docker, PyTorch"
+                        className="field-input w-full mt-1"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="field-label">Min Talent Score: {hhMinScore}</label>
+                      <input
+                        type="range"
+                        min="50"
+                        max="99"
+                        value={hhMinScore}
+                        onChange={e => setHhMinScore(Number(e.target.value))}
+                        className="w-full mt-2 accent-emerald-500 cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="md:col-span-3 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={hhSourcing}
+                        className="btn-primary px-6 py-2.5 text-xs flex items-center gap-2"
+                      >
+                        {hhSourcing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <>Run AI Headhunter <Zap className="w-3.5 h-3.5" /></>}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {hhSourcedData ? (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex justify-between items-center">
+                      <span>✓ Sourced {hhSourcedData.candidates?.length || 0} Outbound Talent Matches</span>
+                      <span>Target Role: {hhSourcedData.target_role}</span>
+                    </div>
+
+                    {hhSourcedData.candidates?.map((cand: any, idx: number) => (
+                      <div key={idx} className="glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-bold text-white text-base">{cand.name}</h3>
+                            <p className="text-xs text-slate-400">{cand.current_role} • {cand.location}</p>
+                          </div>
+                          <span className="badge badge-emerald text-xs font-black px-3 py-1">
+                            {cand.talent_score} Talent Score
+                          </span>
+                        </div>
+
+                        <p className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-300">
+                          <span className="font-bold text-emerald-400 block mb-1">AI Sourcing Signal:</span>
+                          {cand.ai_summary}
+                        </p>
+
+                        {cand.outbound_email_sequence && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-bold text-slate-400">Personalized Outreach Email:</span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(cand.outbound_email_sequence);
+                                  setHhCopiedIdx(idx);
+                                  setTimeout(() => setHhCopiedIdx(null), 2000);
+                                }}
+                                className="btn-primary text-[10px] px-3 py-1 flex items-center gap-1"
+                              >
+                                {hhCopiedIdx === idx ? "✓ Copied" : "Copy Email"}
+                              </button>
+                            </div>
+                            <pre className="p-3 bg-slate-900/80 rounded-lg text-[11px] font-mono text-slate-300 whitespace-pre-wrap">
+                              {cand.outbound_email_sequence}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="glass-panel p-10 rounded-2xl text-center text-slate-500 text-sm">
+                    Specify target role and tech stack above to trigger autonomous outbound sourcing.
+                  </div>
+                )}
               </div>
             )}
           </div>
