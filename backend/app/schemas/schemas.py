@@ -400,13 +400,7 @@ class LiveCodingEvalRequest(BaseModel):
     language: Optional[str] = "python"
     problem_title: Optional[str] = "FastAPI Asynchronous Task Queue"
 
-class OfferNegotiationRequest(BaseModel):
-    candidate_id: int
-    job_id: Optional[int] = None
-    proposed_base: float
-    proposed_equity: Optional[str] = "0.1%"
-    proposed_bonus: Optional[float] = 10000.0
-    recruiter_max_budget: Optional[float] = 180000.0
+
 
 class GenerateAssessmentRequest(BaseModel):
     role_title: str

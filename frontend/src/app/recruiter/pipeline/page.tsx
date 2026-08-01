@@ -20,7 +20,7 @@ const RECRUITER_TABS = [
   { href: "/recruiter/assessments", label: "Online Assessments", icon: FileText, id: "assessments" },
   { href: "/recruiter/interview-simulator", label: "Live Code Simulator", icon: Cpu, id: "simulator" },
   { href: "/recruiter/pair-programming", label: "Pair Programming", icon: Code2, id: "pair" },
-  { href: "/recruiter/offers", label: "Offer & Negotiation", icon: DollarSign, id: "offers" },
+
   { href: "/recruiter/pipeline", label: "Hiring Pipeline", icon: Layers, id: "pipeline" },
   { href: "/recruiter/copilot", label: "AI Copilot", icon: Bot, id: "copilot" },
   { href: "/recruiter/team", label: "Enterprise Team", icon: Users },

@@ -5,7 +5,7 @@ from ..db.database import get_db
 from ..db import models
 from ..schemas import schemas
 from ..core import security
-from ..services import mock_ai_services, recruiter_copilot, interview_simulator, offer_copilot, assessment_generator, headhunter_agent, pair_programming, badge_authority
+from ..services import mock_ai_services, recruiter_copilot, interview_simulator, assessment_generator, headhunter_agent, pair_programming, badge_authority
 
 router = APIRouter(prefix="/recruiter", tags=["Recruiter Portal"])
 
@@ -536,32 +536,7 @@ def simulate_coding_interview(
     )
 
 
-@router.post("/offer/negotiate")
-def negotiate_offer(
-    req: schemas.OfferNegotiationRequest,
-    current_user: models.User = Depends(security.get_current_user),
-    db: Session = Depends(get_db)
-):
-    """AI Offer & Compensation Negotiation Copilot endpoint."""
-    cand = db.query(models.CandidateProfile).filter(models.CandidateProfile.id == req.candidate_id).first()
-    cand_name = cand.full_name if cand else "Aarav Mehta"
-    cand_score = cand.talent_score if cand else 91.5
 
-    job_title = "Senior FastAPI Systems Architect"
-    if req.job_id:
-        job = db.query(models.Job).filter(models.Job.id == req.job_id).first()
-        if job:
-            job_title = job.title
-
-    return offer_copilot.generate_offer_negotiation_agent(
-        candidate_name=cand_name,
-        role_title=job_title,
-        talent_score=cand_score,
-        proposed_base=req.proposed_base,
-        proposed_equity=req.proposed_equity or "0.15%",
-        proposed_bonus=req.proposed_bonus or 15000.0,
-        recruiter_max_budget=req.recruiter_max_budget or 180000.0
-    )
 
 
 @router.get("/telemetry/executive")

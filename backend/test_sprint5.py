@@ -3,7 +3,6 @@ import json
 sys.stdout.reconfigure(encoding='utf-8')
 
 from app.services.interview_simulator import simulate_live_coding_evaluator_agent
-from app.services.offer_copilot import generate_offer_negotiation_agent
 
 def test_sprint5_services():
     print("=== Testing Live Coding Simulator Evaluator Agent ===")
@@ -27,22 +26,6 @@ async def fetch_data(url: str):
     assert result["time_complexity"] == "O(1)"
     assert len(result["test_case_results"]) == 3
     print("✅ Live Coding Simulator Agent passed!")
-
-    print("\n=== Testing AI Offer Negotiation Copilot Agent ===")
-    offer = generate_offer_negotiation_agent(
-        candidate_name="Aarav Mehta",
-        role_title="Senior FastAPI Systems Architect",
-        talent_score=91.5,
-        proposed_base=150000.0,
-        proposed_equity="0.2%",
-        proposed_bonus=20000.0,
-        recruiter_max_budget=185000.0
-    )
-
-    assert offer["retention_probability"] >= 80.0
-    assert len(offer["strategies"]) == 3
-    assert "Formal Offer of Employment" in offer["offer_letter_markdown"]
-    print("✅ AI Offer Negotiation Copilot Agent passed!")
 
     print("\n✨ All Sprint 5 agent service tests completed successfully!")
 
