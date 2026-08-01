@@ -142,7 +142,10 @@ export default function OrganizationDashboard() {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const createHackathon = async () => {
-    if (!hackTitle.trim() || !hackDesc.trim()) return;
+    if (!hackTitle.trim()) {
+      alert("Please enter a Hackathon Title.");
+      return;
+    }
     setCreatingHack(true);
     setHackCreated(false);
     try {
@@ -150,11 +153,11 @@ export default function OrganizationDashboard() {
       const res = await fetch(`${API}/api/v1/organization/hackathon/create`, {
         method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
-          title: hackTitle,
-          description: hackDesc,
-          prize_pool: hackPrize || "$10,000",
-          max_team_size: teamSize,
-          problem_tracks: tracks.length > 0 ? tracks : ["AI", "FullStack"]
+          title: hackTitle.trim(),
+          description: hackDesc.trim() || `${hackTitle.trim()} hackathon event hosted on ApexTalent. Build innovative projects, compete with global developers, and win prizes.`,
+          prize_pool: hackPrize.trim() || "$10,000",
+          max_team_size: teamSize || 4,
+          problem_tracks: tracks.length > 0 ? tracks : ["AI", "FullStack", "Cloud"]
         })
       });
       if (res.ok) {
@@ -166,20 +169,38 @@ export default function OrganizationDashboard() {
         setHackTracks("");
         setHackathons(prev => [newHack, ...prev]);
         fetchAll();
+      } else {
+        alert("Failed to launch hackathon. Please try again.");
       }
-    } catch (e) {}
-    finally { setCreatingHack(false); }
+    } catch (e) {
+      alert("Network error launching hackathon.");
+    } finally { setCreatingHack(false); }
   };
 
   const createEvent = async () => {
-    if (!evtTitle || !evtDesc) return;
+    if (!evtTitle.trim()) {
+      alert("Please enter an Event Title.");
+      return;
+    }
     setCreatingEvt(true);
+    setEvtCreated(false);
     try {
       const res = await fetch(`${API}/api/v1/organization/event/create`, {
         method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ title: evtTitle, description: evtDesc, event_type: evtType, is_online: true })
+        body: JSON.stringify({
+          title: evtTitle.trim(),
+          description: evtDesc.trim() || `${evtTitle.trim()} community workshop & event.`,
+          event_type: evtType,
+          location: "Online / Virtual",
+          is_online: true
+        })
       });
-      if (res.ok) { setEvtCreated(true); setEvtTitle(""); setEvtDesc(""); fetchAll(); }
+      if (res.ok) {
+        setEvtCreated(true);
+        setEvtTitle("");
+        setEvtDesc("");
+        fetchAll();
+      }
     } catch (e) {}
     finally { setCreatingEvt(false); }
   };

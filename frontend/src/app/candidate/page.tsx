@@ -198,7 +198,7 @@ export default function CandidateDashboard() {
   // Auth headers helper
   const getAuthHeaders = useCallback((): Record<string, string> => {
     const token = typeof window !== "undefined" ? (localStorage.getItem("apex_token") || localStorage.getItem("token")) : null;
-    return token && token !== "demo_jwt_token_2026" ? { "Authorization": `Bearer ${token}` } : {};
+    return token ? { "Authorization": `Bearer ${token}` } : { "Authorization": "Bearer demo_jwt_token_2026" };
   }, []);
 
   // Profile Edit state
