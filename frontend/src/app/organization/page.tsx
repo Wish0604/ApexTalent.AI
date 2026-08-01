@@ -142,17 +142,31 @@ export default function OrganizationDashboard() {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const createHackathon = async () => {
-    if (!hackTitle || !hackDesc) return;
+    if (!hackTitle.trim() || !hackDesc.trim()) return;
     setCreatingHack(true);
+    setHackCreated(false);
     try {
+      const tracks = hackTracks.split(",").map(s => s.trim()).filter(Boolean);
       const res = await fetch(`${API}/api/v1/organization/hackathon/create`, {
         method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
-          title: hackTitle, description: hackDesc, prize_pool: hackPrize, max_team_size: teamSize,
-          problem_tracks: hackTracks.split(",").map(s => s.trim()).filter(Boolean)
+          title: hackTitle,
+          description: hackDesc,
+          prize_pool: hackPrize || "$10,000",
+          max_team_size: teamSize,
+          problem_tracks: tracks.length > 0 ? tracks : ["AI", "FullStack"]
         })
       });
-      if (res.ok) { setHackCreated(true); setHackTitle(""); setHackDesc(""); fetchAll(); }
+      if (res.ok) {
+        const newHack = await res.json();
+        setHackCreated(true);
+        setHackTitle("");
+        setHackDesc("");
+        setHackPrize("");
+        setHackTracks("");
+        setHackathons(prev => [newHack, ...prev]);
+        fetchAll();
+      }
     } catch (e) {}
     finally { setCreatingHack(false); }
   };

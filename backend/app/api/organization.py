@@ -106,17 +106,27 @@ def create_hackathon(
         org_id=org.id,
         title=hackathon_data.title,
         description=hackathon_data.description,
-        prize_pool=hackathon_data.prize_pool,
+        prize_pool=hackathon_data.prize_pool or "$10,000",
         max_team_size=hackathon_data.max_team_size or 4,
         start_date=hackathon_data.start_date,
         end_date=hackathon_data.end_date,
-        problem_tracks_json=json.dumps(hackathon_data.problem_tracks or []),
+        problem_tracks_json=json.dumps(hackathon_data.problem_tracks or ["AI", "FullStack"]),
         submissions_json=json.dumps([]),
         teams_json=json.dumps([]),
-        status="upcoming"
+        status="active"
     )
     db.add(hack)
     org.events_hosted = (org.events_hosted or 0) + 1
+
+    # Notify users
+    notif = models.Notification(
+        user_id=current_user.id,
+        title=f"🏆 Hackathon Launched: {hack.title}",
+        message=f"Your hackathon '{hack.title}' is live and open for candidate registrations!",
+        notification_type="hackathon",
+        action_url="/organization"
+    )
+    db.add(notif)
     db.commit()
     db.refresh(hack)
     return hack

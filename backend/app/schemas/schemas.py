@@ -183,13 +183,13 @@ class HackathonResponse(BaseModel):
     title: str
     description: str
     status: str
-    prize_pool: Optional[str]
-    max_team_size: int
-    start_date: Optional[datetime]
-    end_date: Optional[datetime]
-    problem_tracks_json: str
-    submissions_json: str
-    teams_json: str
+    prize_pool: Optional[str] = None
+    max_team_size: int = 4
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    problem_tracks_json: Optional[str] = "[]"
+    submissions_json: Optional[str] = "[]"
+    teams_json: Optional[str] = "[]"
     class Config:
         from_attributes = True
 
