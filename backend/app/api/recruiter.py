@@ -352,6 +352,16 @@ def copilot_chat(
     return res
 
 
+@router.get("/copilot/brief")
+async def get_copilot_brief(
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """GET endpoint returning Today's Hiring Brief telemetry."""
+    from ..services.copilot.actions import get_todays_hiring_brief
+    return await get_todays_hiring_brief()
+
+
 @router.post("/pipeline/update-stage")
 def update_pipeline_stage(
     req: schemas.PipelineUpdateStageRequest,

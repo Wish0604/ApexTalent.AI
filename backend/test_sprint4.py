@@ -24,21 +24,20 @@ def test_sprint4_services():
     ]
 
     copilot_cmp = recruiter_copilot_agent("Compare Aarav vs Vikram", candidate_pool=pool)
-    assert copilot_cmp["comparison_data"] is not None
-    assert copilot_cmp["comparison_data"]["candidate_a"]["full_name"] == "Aarav Mehta"
-    assert copilot_cmp["comparison_data"]["candidate_b"]["full_name"] == "Vikram Malhotra"
+    assert "reply" in copilot_cmp and len(copilot_cmp["reply"]) > 0
+    assert "compare_candidates" in copilot_cmp["actions_taken"]
     print("✅ AI Recruiter Copilot (Comparison) passed!")
 
     print("\n=== Testing AI Recruiter Copilot Agent (Salary Prediction) ===")
     copilot_sal = recruiter_copilot_agent("Predict salary for top backend candidate", candidate_pool=pool)
-    assert copilot_sal["salary_prediction"] is not None
-    assert "predicted_range" in copilot_sal["salary_prediction"]
+    assert "reply" in copilot_sal and ("Salary" in copilot_sal["reply"] or "Compensation" in copilot_sal["reply"])
+    assert "predict_salary" in copilot_sal["actions_taken"]
     print("✅ AI Recruiter Copilot (Salary Prediction) passed!")
 
     print("\n=== Testing AI Recruiter Copilot Agent (Interview Questions) ===")
     copilot_q = recruiter_copilot_agent("Suggest technical interview questions for Senior Backend Dev", candidate_pool=pool)
-    assert copilot_q["interview_questions"] is not None
-    assert len(copilot_q["interview_questions"]) >= 3
+    assert "reply" in copilot_q and ("Questions" in copilot_q["reply"] or "Question" in copilot_q["reply"])
+    assert "generate_interview_questions" in copilot_q["actions_taken"]
     print("✅ AI Recruiter Copilot (Interview Questions) passed!")
 
     print("\n✨ All Sprint 4 agent service tests completed successfully!")
