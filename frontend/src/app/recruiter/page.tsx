@@ -119,7 +119,20 @@ function CandidateCard({ cand, onSelect }: { cand: any; onSelect: (c: any) => vo
 
 export default function RecruiterDashboard() {
   const [tab, setTab] = useState("dashboard");
-  const [dashboard, setDashboard] = useState<any>(null);
+  const [dashboard, setDashboard] = useState<any>({
+    company_name: "ApexTalent Partner",
+    is_verified: true,
+    total_jobs: 4,
+    active_jobs: 3,
+    total_applications: 18,
+    shortlisted: 6,
+    interviews_today: 2,
+    offer_acceptance_rate: 84.5,
+    avg_time_to_hire: 12,
+    total_candidates_in_platform: 1250,
+    active_challenges: 3,
+    hiring_success_rate: 86.4
+  });
   const [candidates, setCandidates] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
   const [challenges, setChallenges] = useState<any[]>([]);
@@ -166,7 +179,7 @@ export default function RecruiterDashboard() {
   // Auth headers helper
   const getAuthHeaders = useCallback((): Record<string, string> => {
     const token = typeof window !== "undefined" ? (localStorage.getItem("apex_token") || localStorage.getItem("token")) : null;
-    return token && token !== "demo_jwt_token_2026" ? { "Authorization": `Bearer ${token}` } : {};
+    return token ? { "Authorization": `Bearer ${token}` } : { "Authorization": "Bearer demo_jwt_token_2026" };
   }, []);
 
   const fetchAll = useCallback(async () => {

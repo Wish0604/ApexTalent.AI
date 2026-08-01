@@ -38,8 +38,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    if not token:
-        # For prototype simplicity, allow a fallback guest/first user if no token is provided
+    if not token or token == "demo_jwt_token_2026":
+        # For prototype simplicity, allow a fallback guest/first user if no token or demo token is provided
         first_user = db.query(models.User).first()
         if first_user:
             return first_user

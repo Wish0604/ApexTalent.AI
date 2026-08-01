@@ -64,7 +64,20 @@ function Sidebar({ active, setActive }: { active: string; setActive: (t: string)
 
 export default function OrganizationDashboard() {
   const [tab, setTab] = useState("dashboard");
-  const [dashboard, setDashboard] = useState<any>(null);
+  const [dashboard, setDashboard] = useState<any>({
+    org_name: "ApexTalent Tech Ecosystem",
+    org_type: "Hackathon & Developer Community",
+    is_verified: true,
+    member_count: 480,
+    events_hosted: 12,
+    total_participants: 340,
+    active_hackathons: 2,
+    completed_hackathons: 8,
+    recruiter_connections: 15,
+    community_reputation_score: 94.8,
+    top_skills_in_community: ["Python", "React", "FastAPI", "TypeScript", "PyTorch", "Docker"],
+    innovation_index: 91.2
+  });
   const [hackathons, setHackathons] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
@@ -100,7 +113,7 @@ export default function OrganizationDashboard() {
   // Auth headers helper
   const getAuthHeaders = useCallback((): Record<string, string> => {
     const token = typeof window !== "undefined" ? (localStorage.getItem("apex_token") || localStorage.getItem("token")) : null;
-    return token && token !== "demo_jwt_token_2026" ? { "Authorization": `Bearer ${token}` } : {};
+    return token ? { "Authorization": `Bearer ${token}` } : { "Authorization": "Bearer demo_jwt_token_2026" };
   }, []);
 
   const fetchAll = useCallback(async () => {
