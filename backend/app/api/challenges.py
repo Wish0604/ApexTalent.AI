@@ -18,6 +18,54 @@ def _get_recruiter(current_user: models.User, db: Session):
     return rec
 
 
+class GenerateAgentChallengeReq(schemas.BaseModel):
+    role_title: str
+    tech_stack: list[str] = []
+    experience_level: str = "mid"
+    time_limit_hours: int = 48
+
+@router.post("/generate-agent")
+def generate_agent_challenge(
+    req: GenerateAgentChallengeReq,
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(get_db)
+):
+    recruiter = _get_recruiter(current_user, db)
+    from ..services.recruiter_copilot import generate_hiring_challenge_agent
+    
+    generated = generate_hiring_challenge_agent(
+        role_title=req.role_title,
+        tech_stack=req.tech_stack,
+        experience_level=req.experience_level,
+        time_limit_hours=req.time_limit_hours
+    )
+    
+    challenge = models.HiringChallenge(
+        recruiter_id=recruiter.id,
+        title=generated["challenge_title"],
+        description=generated["problem_statement"],
+        challenge_type=generated["challenge_type"],
+        rubrics_json=json.dumps(generated["evaluation_rubric"]),
+        deliverables_json=json.dumps(generated["deliverables"]),
+        deadline_days=max(1, req.time_limit_hours // 24)
+    )
+    db.add(challenge)
+    db.commit()
+    db.refresh(challenge)
+
+    return {
+        "id": challenge.id,
+        "challenge_title": generated["challenge_title"],
+        "role_title": req.role_title,
+        "challenge_type": generated["challenge_type"],
+        "problem_statement": generated["problem_statement"],
+        "deliverables": generated["deliverables"],
+        "evaluation_rubric": generated["evaluation_rubric"],
+        "tech_stack": generated["tech_stack"],
+        "test_scenarios": generated["test_scenarios"]
+    }
+
+
 @router.post("/create", response_model=schemas.ChallengeResponse)
 def create_challenge(
     data: schemas.ChallengeCreate,
