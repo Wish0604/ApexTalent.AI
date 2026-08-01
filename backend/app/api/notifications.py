@@ -136,3 +136,74 @@ def mark_all_read(
     ).update({"is_read": True})
     db.commit()
     return {"message": "All notifications marked as read"}
+
+
+@router.get("/preferences")
+def get_notification_preferences(
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Retrieve user notification and email preferences."""
+    prefs = db.query(models.NotificationPreference).filter(
+        models.NotificationPreference.user_id == current_user.id
+    ).first()
+    if not prefs:
+        prefs = models.NotificationPreference(user_id=current_user.id)
+        db.add(prefs)
+        db.commit()
+        db.refresh(prefs)
+    return prefs
+
+
+@router.post("/preferences")
+def update_notification_preferences(
+    req: dict,
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update user notification and email preferences."""
+    prefs = db.query(models.NotificationPreference).filter(
+        models.NotificationPreference.user_id == current_user.id
+    ).first()
+    if not prefs:
+        prefs = models.NotificationPreference(user_id=current_user.id)
+        db.add(prefs)
+
+    for field in ["email_welcome", "email_security", "email_interviews", "email_ai_reports", "email_jobs", "email_hackathons", "email_weekly_digest", "in_app_all"]:
+        if field in req:
+            setattr(prefs, field, bool(req[field]))
+
+    db.commit()
+    db.refresh(prefs)
+    return prefs
+
+
+@router.post("/email/test")
+def test_email_template(
+    template_type: str = "welcome",
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Triggers an email template test for the logged-in user."""
+    from ..services import email_service
+    first_name = current_user.email.split("@")[0].capitalize()
+    
+    if template_type == "welcome":
+        res = email_service.send_welcome_email(current_user.email, first_name)
+    elif template_type == "project":
+        res = email_service.send_project_submitted(current_user.email, first_name, "Apex AI Code Analyzer")
+    elif template_type == "ai_report":
+        res = email_service.send_ai_evaluation_ready(
+            current_user.email, first_name, "Apex AI Microservice Engine", 94.5, "Exemplary", "Clean Async Architecture", "Unit Test Coverage"
+        )
+    elif template_type == "interview":
+        res = email_service.send_interview_scheduled(
+            current_user.email, first_name, "Senior Backend Systems Engineer", "ApexTalent Partners", "Tomorrow at 10:00 AM IST", "/candidate?tab=interviews"
+        )
+    elif template_type == "hackathon":
+        res = email_service.send_hackathon_registration(current_user.email, first_name, "HackIndia 2026 AI Innovation Hackathon")
+    else:
+        res = email_service.send_welcome_email(current_user.email, first_name)
+
+    return {"message": f"Email test '{template_type}' triggered successfully", "dispatch_result": res}
+

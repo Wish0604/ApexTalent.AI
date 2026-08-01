@@ -7,6 +7,7 @@ from ..db import models
 from ..schemas import schemas
 from ..core import security
 from ..services import github_oauth_service
+from ..services.notification_service import NotificationService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -50,6 +51,13 @@ def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
         db.add(org)
         
     db.commit()
+
+    # Dispatch Welcome Email & In-App Notification
+    try:
+        NotificationService.dispatch_welcome(db, new_user)
+    except Exception as e:
+        print(f"⚠️ Welcome notification notice: {e}")
+
     return new_user
 
 @router.post("/login", response_model=schemas.Token)

@@ -42,6 +42,7 @@ class User(Base):
     refresh_tokens = relationship("RefreshToken", back_populates="user")
     email_verifications = relationship("EmailVerificationToken", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
+    notification_preferences = relationship("NotificationPreference", back_populates="user", uselist=False)
     audit_logs = relationship("AuditLog", back_populates="user")
 
 
@@ -556,6 +557,24 @@ class Notification(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="notifications")
+
+
+class NotificationPreference(Base):
+    __tablename__ = "notification_preferences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    email_welcome = Column(Boolean, default=True)
+    email_security = Column(Boolean, default=True)
+    email_interviews = Column(Boolean, default=True)
+    email_ai_reports = Column(Boolean, default=True)
+    email_jobs = Column(Boolean, default=True)
+    email_hackathons = Column(Boolean, default=True)
+    email_weekly_digest = Column(Boolean, default=True)
+    in_app_all = Column(Boolean, default=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    user = relationship("User", back_populates="notification_preferences")
 
 
 # =============================================================================

@@ -6,7 +6,7 @@ import {
   User, Cpu, GitBranch, GitBranch as Github, FileText, Briefcase, Award, CheckCircle,
   RefreshCw, Network, ArrowLeft, Bell, LayoutDashboard, Map, Compass,
   Trophy, FolderOpen, BookOpen, Mic, ChevronRight, Star,
-  TrendingUp, Target, Zap, Clock, Send, ExternalLink
+  TrendingUp, Target, Zap, Clock, Send, ExternalLink, ShieldCheck, Settings
 } from "lucide-react";
 import {
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis,
@@ -96,10 +96,18 @@ function Sidebar({ active, setActive, unread }: { active: string; setActive: (t:
         })}
       </div>
 
-      <div className="p-3 border-t border-white/5">
+      <div className="p-3 border-t border-white/5 space-y-0.5">
+        <Link href="/candidate/verification" className="sidebar-item w-full flex text-emerald-400 hover:text-emerald-300">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>Verification & Badges</span>
+        </Link>
+        <Link href="/settings" className="sidebar-item w-full flex text-slate-400 hover:text-slate-200">
+          <Settings className="w-3.5 h-3.5" />
+          <span>Account Settings</span>
+        </Link>
         <Link href="/" className="sidebar-item w-full flex">
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Portal</span>
+          <span>Back to Home</span>
         </Link>
       </div>
     </div>
