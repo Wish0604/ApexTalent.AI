@@ -117,7 +117,29 @@ function Sidebar({ active, setActive, unread }: { active: string; setActive: (t:
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function CandidateDashboard() {
   const [tab, setTab] = useState("dashboard");
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<any>({
+    full_name: "Apex Candidate",
+    title: "Senior AI Systems & FullStack Engineer",
+    bio: "Passionate engineer building high-performance distributed AI applications.",
+    location: "San Francisco, CA (Remote)",
+    talent_score: 92.5,
+    coding_score: 94.0,
+    innovation_score: 90.0,
+    leadership_score: 88.5,
+    communication_score: 91.0,
+    community_score: 89.0,
+    consistency_score: 95.0,
+    skills_json: '["Python", "FastAPI", "React", "TypeScript", "Docker", "PyTorch"]',
+    projects_json: '[]',
+    verification_badges_json: '[]',
+    education_json: '[]',
+    experience_json: '[]',
+    hackathon_results_json: '[]',
+    availability: "open",
+    github_username: "Wish0604",
+    linkedin_url: "",
+    salary_expectation: "$140,000 - $170,000"
+  });
   const [jobs, setJobs] = useState<any[]>([]);
   const [hackathons, setHackathons] = useState<any[]>([]);
   const [interviews, setInterviews] = useState<any[]>([]);
