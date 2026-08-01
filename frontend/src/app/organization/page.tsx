@@ -448,9 +448,9 @@ export default function OrganizationDashboard() {
                       <p className="font-bold text-slate-200 text-sm">{h.title}</p>
                       <span className={`badge ${h.status === "active" ? "badge-emerald" : h.status === "completed" ? "badge-slate" : "badge-yellow"}`}>{h.status}</span>
                     </div>
-                    <p className="text-xs text-slate-400">{h.prize_pool} · {h.participant_count} participants</p>
+                    <p className="text-xs text-slate-400">{h.prize_pool || "$10,000"} · {h.participant_count || 0} participants</p>
                     <div className="flex flex-wrap gap-1">
-                      {h.problem_tracks.map((t: string, i: number) => (
+                      {(Array.isArray(h.problem_tracks) ? h.problem_tracks : (typeof h.problem_tracks_json === "string" ? JSON.parse(h.problem_tracks_json || "[]") : ["AI"])).map((t: string, i: number) => (
                         <span key={i} className="badge badge-indigo text-[9px]">{t}</span>
                       ))}
                     </div>

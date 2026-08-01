@@ -94,7 +94,7 @@ def get_org_hackathons(
     return result
 
 
-@router.post("/hackathon/create", response_model=schemas.HackathonResponse)
+@router.post("/hackathon/create")
 def create_hackathon(
     hackathon_data: schemas.HackathonCreate,
     current_user: models.User = Depends(security.get_current_user),
@@ -128,7 +128,26 @@ def create_hackathon(
     db.add(notif)
     db.commit()
     db.refresh(hack)
-    return hack
+    
+    tracks = json.loads(hack.problem_tracks_json) if hack.problem_tracks_json else []
+    return {
+        "id": hack.id,
+        "org_id": hack.org_id,
+        "title": hack.title,
+        "description": hack.description,
+        "status": hack.status,
+        "prize_pool": hack.prize_pool,
+        "max_team_size": hack.max_team_size,
+        "participant_count": 0,
+        "start_date": hack.start_date.isoformat() if hack.start_date else None,
+        "end_date": hack.end_date.isoformat() if hack.end_date else None,
+        "problem_tracks": tracks,
+        "problem_tracks_json": hack.problem_tracks_json or "[]",
+        "submissions": [],
+        "submissions_json": "[]",
+        "teams": [],
+        "teams_json": "[]"
+    }
 
 
 @router.post("/hackathon/{hackathon_id}/team-builder")
