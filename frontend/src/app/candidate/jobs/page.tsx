@@ -4,16 +4,67 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Briefcase, Search, MapPin, DollarSign, Sparkles, Filter,
-  CheckCircle, ArrowLeft, Bookmark, Clock, Send, Building2, ExternalLink
+  CheckCircle, ArrowLeft, Bookmark, Clock, Send, Building2, ExternalLink,
+  LayoutDashboard, User, FolderOpen, Award, BarChart3, ShieldCheck, Cpu, Settings
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+function CandidateSidebar({ active }: { active: string }) {
+  const items = [
+    { href: "/candidate", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/candidate?tab=profile", label: "Profile Hub", icon: User },
+    { href: "/candidate/projects", label: "Projects & Telemetry", icon: FolderOpen, id: "projects" },
+    { href: "/candidate/talent-score", label: "Talent Score 360", icon: Award, id: "talent-score" },
+    { href: "/candidate/jobs", label: "Job Matches", icon: Briefcase, id: "jobs" },
+    { href: "/candidate/analytics", label: "Analytics & GitHub", icon: BarChart3, id: "analytics" },
+    { href: "/candidate/verification", label: "Verification & Badges", icon: ShieldCheck, id: "verification" },
+  ];
+
+  return (
+    <div className="portal-sidebar hidden md:block">
+      <div className="px-4 py-5 border-b border-white/5 flex items-center gap-2.5">
+        <div className="p-1.5 bg-violet-600/20 rounded-lg border border-violet-500/30">
+          <Cpu className="w-4 h-4 text-violet-400" />
+        </div>
+        <span className="font-bold text-sm gradient-text-violet">Candidate Hub</span>
+      </div>
+
+      <div className="flex-1 py-3 px-3 space-y-0.5">
+        <p className="section-title">Navigation</p>
+        {items.map((item, idx) => {
+          const Icon = item.icon;
+          const isActive = active === item.id;
+          return (
+            <Link
+              key={idx}
+              href={item.href}
+              className={`sidebar-item w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                isActive ? "bg-violet-600/30 text-violet-200 border border-violet-500/40" : "text-slate-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="p-3 border-t border-white/5 space-y-0.5">
+        <Link href="/settings" className="sidebar-item w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-400 hover:text-slate-200">
+          <Settings className="w-4 h-4" />
+          <span>Account Settings</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default function CandidateJobsPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"search" | "applied" | "saved">("search");
+  const [activeTab, setActiveTab] = useState<"search" | "applied">("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
@@ -71,161 +122,163 @@ export default function CandidateJobsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#070b12] text-slate-100 p-6 md:p-10 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="candidate-dashboard-bg relative min-h-screen text-slate-100 font-sans">
+      <div className="candidate-dashboard-overlay absolute inset-0 pointer-events-none" />
+      <div className="relative z-10 flex candidate-dashboard-container min-h-screen">
         
-        {/* Navigation Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
-          <div className="flex items-center gap-3">
-            <Link href="/candidate" className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                <Briefcase className="w-6 h-6 text-violet-400" /> AI Job Matching & Search Studio
-              </h1>
-              <p className="text-xs text-slate-400 mt-0.5">Automated AI match scoring, application pipeline tracking, and direct recruiter invites.</p>
-            </div>
-          </div>
+        <CandidateSidebar active="jobs" />
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveTab("search")}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${
-                activeTab === "search" ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
-              }`}
-            >
-              Job Recommendations ({jobs.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("applied")}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${
-                activeTab === "applied" ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
-              }`}
-            >
-              Applied Applications ({applications.length})
-            </button>
-          </div>
-        </div>
-
-        {applyMsg && (
-          <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" /> {applyMsg}
-          </div>
-        )}
-
-        {/* Tab 1: Search & AI Recommendations */}
-        {activeTab === "search" && (
-          <div className="space-y-6">
-            
-            {/* Search & Filter Bar */}
-            <div className="glass-panel p-4 rounded-2xl border border-white/10 flex flex-wrap gap-4 items-center">
-              <div className="flex-1 flex items-center gap-2 bg-slate-900/80 px-3.5 py-2 rounded-xl border border-white/10">
-                <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search by title, technology, or company..."
-                  className="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-full"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 text-xs">
-                <Filter className="w-4 h-4 text-slate-400" />
-                <select
-                  value={locationFilter}
-                  onChange={e => setLocationFilter(e.target.value)}
-                  className="bg-slate-900 text-slate-300 px-3 py-2 rounded-xl border border-white/10 focus:outline-none"
-                >
-                  <option value="all">All Locations</option>
-                  <option value="remote">Remote Only</option>
-                  <option value="india">India</option>
-                  <option value="usa">USA</option>
-                </select>
+        <main className="portal-main px-6 py-8 max-w-7xl w-full space-y-6 animate-fade-in">
+          
+          {/* Navigation Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
+            <div className="flex items-center gap-3">
+              <Link href="/candidate" className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <div>
+                <h1 className="text-2xl font-black text-white flex items-center gap-2">
+                  <Briefcase className="w-6 h-6 text-violet-400" /> AI Job Matching & Search Studio
+                </h1>
+                <p className="text-xs text-slate-400 mt-0.5">Automated AI match scoring, application pipeline tracking, and direct recruiter invites.</p>
               </div>
             </div>
 
-            {/* Jobs List */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {filteredJobs.map((job, idx) => {
-                const isApplied = applications.some(a => a.job_id === job.id);
-                return (
-                  <div key={job.id || idx} className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4 hover:border-violet-500/40 transition">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <span className="badge badge-violet text-[10px] mb-2 inline-block font-mono">
-                          {job.match_score ? `${job.match_score}% AI Match` : "94% AI Match"}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab("search")}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${
+                  activeTab === "search" ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
+                }`}
+              >
+                Job Recommendations ({jobs.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("applied")}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${
+                  activeTab === "applied" ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
+                }`}
+              >
+                Applied Applications ({applications.length})
+              </button>
+            </div>
+          </div>
+
+          {applyMsg && (
+            <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" /> {applyMsg}
+            </div>
+          )}
+
+          {/* Search & AI Recommendations */}
+          {activeTab === "search" && (
+            <div className="space-y-6">
+              <div className="glass-panel p-4 rounded-2xl border border-white/10 flex flex-wrap gap-4 items-center">
+                <div className="flex-1 flex items-center gap-2 bg-slate-900/80 px-3.5 py-2 rounded-xl border border-white/10">
+                  <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search by title, technology, or company..."
+                    className="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-full"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 text-xs">
+                  <Filter className="w-4 h-4 text-slate-400" />
+                  <select
+                    value={locationFilter}
+                    onChange={e => setLocationFilter(e.target.value)}
+                    className="bg-slate-900 text-slate-300 px-3 py-2 rounded-xl border border-white/10 focus:outline-none"
+                  >
+                    <option value="all">All Locations</option>
+                    <option value="remote">Remote Only</option>
+                    <option value="india">India</option>
+                    <option value="usa">USA</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {filteredJobs.map((job, idx) => {
+                  const isApplied = applications.some(a => a.job_id === job.id);
+                  return (
+                    <div key={job.id || idx} className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4 hover:border-violet-500/40 transition">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <span className="badge badge-violet text-[10px] mb-2 inline-block font-mono">
+                            {job.match_score ? `${job.match_score}% AI Match` : "94% AI Match"}
+                          </span>
+                          <h3 className="font-bold text-white text-base">{job.title}</h3>
+                          <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1">
+                            <Building2 className="w-3.5 h-3.5 text-slate-500" /> {job.company || "Apex Systems Inc."}
+                          </p>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                          {job.salary || "$130,000 – $160,000"}
                         </span>
-                        <h3 className="font-bold text-white text-base">{job.title}</h3>
-                        <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1">
-                          <Building2 className="w-3.5 h-3.5 text-slate-500" /> {job.company || "Apex Systems Inc."}
-                        </p>
                       </div>
-                      <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                        {job.salary || "$130,000 – $160,000"}
+
+                      <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">{job.description}</p>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        {(job.skills || ["FastAPI", "React", "Python"]).map((s: string, i: number) => (
+                          <span key={i} className="skill-chip text-[10px]">{s}</span>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-white/10 pt-4 text-xs text-slate-400">
+                        <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-500" />{job.location || "Remote"}</span>
+                        {isApplied ? (
+                          <span className="text-emerald-400 font-bold flex items-center gap-1">
+                            <CheckCircle className="w-4 h-4" /> Applied
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleApply(job.id)}
+                            disabled={applyingJobId === job.id}
+                            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1"
+                          >
+                            <Send className="w-3 h-3" /> Apply Now
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Applied Applications */}
+          {activeTab === "applied" && (
+            <div className="space-y-4">
+              <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Application Pipeline Tracker</h2>
+              {applications.length === 0 ? (
+                <div className="glass-panel p-12 text-center rounded-2xl text-slate-500 italic space-y-2">
+                  <Clock className="w-8 h-8 mx-auto text-slate-600" />
+                  <p>No active job applications tracked yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {applications.map((app, idx) => (
+                    <div key={idx} className="glass-panel p-5 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <h3 className="font-bold text-white text-sm">{app.job_title || "Backend Systems Engineer"}</h3>
+                        <p className="text-xs text-slate-400">{app.company || "Razorpay"} • Applied on {app.applied_at || "Recent"}</p>
+                      </div>
+                      <span className="badge badge-emerald text-xs px-3 py-1 font-semibold">
+                        {app.status || "Under Review"}
                       </span>
                     </div>
-
-                    <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">{job.description}</p>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {(job.skills || ["FastAPI", "React", "Python"]).map((s: string, i: number) => (
-                        <span key={i} className="skill-chip text-[10px]">{s}</span>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-between border-t border-white/10 pt-4 text-xs text-slate-400">
-                      <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-500" />{job.location || "Remote"}</span>
-                      {isApplied ? (
-                        <span className="text-emerald-400 font-bold flex items-center gap-1">
-                          <CheckCircle className="w-4 h-4" /> Applied
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleApply(job.id)}
-                          disabled={applyingJobId === job.id}
-                          className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1"
-                        >
-                          <Send className="w-3 h-3" /> Apply Now
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                  ))}
+                </div>
+              )}
             </div>
+          )}
 
-          </div>
-        )}
-
-        {/* Tab 2: Applied Applications */}
-        {activeTab === "applied" && (
-          <div className="space-y-4">
-            <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Application Pipeline Tracker</h2>
-            {applications.length === 0 ? (
-              <div className="glass-panel p-12 text-center rounded-2xl text-slate-500 italic space-y-2">
-                <Clock className="w-8 h-8 mx-auto text-slate-600" />
-                <p>No active job applications tracked yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {applications.map((app, idx) => (
-                  <div key={idx} className="glass-panel p-5 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <h3 className="font-bold text-white text-sm">{app.job_title || "Backend Systems Engineer"}</h3>
-                      <p className="text-xs text-slate-400">{app.company || "Razorpay"} • Applied on {app.applied_at || "Recent"}</p>
-                    </div>
-                    <span className="badge badge-emerald text-xs px-3 py-1 font-semibold">
-                      {app.status || "Under Review"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
+        </main>
       </div>
     </div>
   );
